@@ -12,9 +12,12 @@ interface ItETH {
     function shares(address _user) external view returns (uint256);
     function balanceOf(address _user) external view returns (uint256);
 
-    function initialize(address _liquidityPool) external;
+    // minting the shares for user
     function mintShares(address _user, uint256 _share) external;
+
+    // in case of withdraw the pool should burn the shares
     function burnShares(address _user, uint256 _share) external;
+
     function transferFrom(address _sender, address _recipient, uint256 _amount) external returns (bool);
     function transfer(address _recipient, uint256 _amount) external returns (bool);
     function approve(address _spender, uint256 _amount) external returns (bool);
