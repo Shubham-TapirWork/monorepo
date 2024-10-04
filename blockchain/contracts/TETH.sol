@@ -8,7 +8,7 @@ import "./interfaces/ILiquidityPool.sol";
 import "./interfaces/ItETH.sol";
 
 
-contract TETH is IERC20, ItETH, Ownable {
+contract TETH is /*IERC20, ItETH,*/ Ownable {
 
     ILiquidityPool public liquidityPool;
 
@@ -29,8 +29,8 @@ contract TETH is IERC20, ItETH, Ownable {
         shares[_user] += _share;
         totalShares += _share;
 
-        emit Transfer(address(0), _user, liquidityPool.amountForShare(_share));
-        emit TransferShares(address(0), _user, _share);
+//        emit Transfer(address(0), _user, liquidityPool.amountForShare(_share));
+//        emit TransferShares(address(0), _user, _share);
     }
 
 

@@ -16,5 +16,5 @@ interface ILiquidityPool {
     function getTotalEtherClaimOf(address _user) external view returns (uint256);
 
     // will calculate total ETH in in pool and outside pool(in beaconchain, rewarding and etc, this var should change oracle)
-    function getTotalPooledEther() public view returns (uint256);
+    function getTotalPooledEther() external view returns (uint256);
 }
