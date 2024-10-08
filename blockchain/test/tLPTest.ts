@@ -75,6 +75,12 @@ describe("TLP", function () {
       expect(await tETH.balanceOf(firstAccount.address)).to.be.equal(ethers.parseEther("2.5"))
       expect(await tETH.balanceOf(secondAccount.address)).to.be.equal(ethers.parseEther("2.5"))
       expect(await tETH.balanceOf(thirdAccount.address)).to.be.equal(0)
+
+      // withdraw the 1 ETH from first user and let's see the shares
+      await lp.connect(firstAccount).withdraw(firstAccount.address, ethers.parseEther("1"));
+      expect(await tETH.balanceOf(firstAccount.address)).to.be.equal(ethers.parseEther("1.5"))
+      expect(await tETH.shares(secondAccount.address)).to.be.equal(ethers.parseEther("1"))
+      expect(await tETH.shares(firstAccount.address)).to.be.equal(ethers.parseEther("0.6"))
     });
 
   });

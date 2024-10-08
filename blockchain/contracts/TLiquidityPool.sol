@@ -38,7 +38,8 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     event Rebase(uint256 totalEthLocked, uint256 totalEEthShares);
     /// @dev deposit event
     event Deposit(address indexed sender, uint256 amount);
-
+    /// @dev withdraw event
+    event Withdraw(address indexed sender, address receipent, uint256 amount);
 
     /// @notice Constructor to initialize the contract
     constructor(address _managerAddress)
@@ -90,6 +91,7 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
         _sendFund(_recipient, _amount);
 
+        emit Withdraw(msg.sender, _recipient, _amount);
         return share;
     }
 
