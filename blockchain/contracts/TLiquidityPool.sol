@@ -11,22 +11,47 @@ import "./interfaces/ILiquidityPool.sol";
 /// @dev The contract interacts with the tETH token contract to mint shares based on Ether deposits.
 contract TLiquidityPool is Ownable, ILiquidityPool {
     /// @notice Reference to the ItETH contract that manages tETH shares
-    ItETH immutable public tETH;
+    ItETH public tETH;
+
+    /// @notice the address which will call rebase function and update the contract balance by adding rewards
+    address public managerAddress;
 
     /// @notice Tracks the total value (in Ether) that has been claimed or withdrawn from the liquidity pool
-    uint128 public totalValueOutOfLp;
+    uint256 public totalValueOutOfLp;
 
     /// @notice Tracks the total value (in Ether) that is currently deposited in the liquidity pool
-    uint128 public totalValueInLp;
+    uint256 public totalValueInLp;
 
     /// @dev Custom error to handle invalid deposit amounts or incorrect share calculations
     error InvalidAmount();
+    /// @dev Custom error to handle when tETH is already setted
+    error TETHAlreadySet();
+    /// @dev when rebase function is called by non Manager Address
+    error IncorrectCaller();
+    /// @dev error when insufficient balance
+    error InsufficientLiquidity();
+
+    /**
+        EVENTS
+    **/
+    /// @dev rebase event
+    event Rebase(uint256 totalEthLocked, uint256 totalEEthShares);
+    /// @dev deposit event
+    event Deposit(address indexed sender, uint256 amount);
+
 
     /// @notice Constructor to initialize the contract
-    /// @param _tEthAddress The address of the ItETH contract (tokenized Ether contract)
-    constructor(address _tEthAddress)
+    constructor(address _managerAddress)
     Ownable(msg.sender) {
-        tETH = ItETH(_tEthAddress);
+        managerAddress = _managerAddress;
+    }
+
+    /// @notice Allows owner to set tETH address
+    /// @dev sets tETH contract address to LP, only owner can call this contract, also tETH should be zero address
+    /// @param _contractTETH tETH address
+    function setContractTETH(address _contractTETH) external onlyOwner {
+        if (address(tETH) != address(0)) revert TETHAlreadySet();
+        tETH = ItETH(_contractTETH);
     }
 
     /// @notice Allows users to deposit Ether into the liquidity pool and mint tETH shares in return
@@ -45,8 +70,29 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
         // Mint tETH shares to the user
         tETH.mintShares(msg.sender, share);
 
+        emit Deposit(msg.sender, _amount);
         return share;  // Return the number of shares minted
     }
+
+
+    /// @notice withdraw from pool
+    /// @dev Burns user share from msg.senders account & Sends equivalent amount of ETH back to the recipient
+    /// @param _recipient the recipient who will receives the ETH
+    /// @param _amount the amount to withdraw from contract
+    /// it returns the amount of shares burned
+    function withdraw(address _recipient, uint256 _amount) external returns (uint256) {
+        uint256 share = sharesForWithdrawalAmount(_amount);
+        if (totalValueInLp < _amount || tETH.balanceOf(msg.sender) < _amount) revert InsufficientLiquidity();
+        if (_amount > type(uint128).max || _amount == 0 || share == 0) revert InvalidAmount();
+
+        totalValueInLp -= uint128(_amount);
+        tETH.burnShares(msg.sender, share);
+
+        _sendFund(_recipient, _amount);
+
+        return share;
+    }
+
 
     /// @notice Internal function to calculate how many tETH shares should be minted for a given deposit amount
     /// @param _depositAmount The amount of Ether being deposited
@@ -101,6 +147,22 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
         return staked;  // Return the claimable Ether
     }
 
+    /**
+     * @notice Calculates the amount of shares required to withdraw a specified amount of ether.
+     * @param _amount The amount of ether to be withdrawn.
+     * @return The number of shares corresponding to the given ether amount.
+    */
+    function sharesForWithdrawalAmount(uint256 _amount) public view returns (uint256) {
+        uint256 totalPooledEther = getTotalPooledEther(); // Get the total ether in the pool
+        if (totalPooledEther == 0) {
+            return 0; // If no ether is pooled, return 0 shares
+        }
+        uint256 numerator = _amount * tETH.totalShares(); // Calculate numerator (ether amount * total shares)
+
+        return (numerator + totalPooledEther - 1) / totalPooledEther;
+    }
+
+
     /// @notice Converts a given number of tETH shares back into an Ether amount
     /// @param _share The number of tETH shares to convert
     /// @return The corresponding Ether amount (in Wei)
@@ -114,5 +176,25 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
         // Calculate the Ether amount based on the proportion of shares to total pooled Ether
         return (_share * getTotalPooledEther()) / totalShares;
+
     }
+
+    /// @notice adding rewards to our contract to calculate price correctly
+    /// @param _accruedRewards The validators rewards
+    function rebase(int256 _accruedRewards) public {
+        if (msg.sender != address(managerAddress)) revert IncorrectCaller();
+        totalValueOutOfLp = uint256(int256(totalValueOutOfLp) + _accruedRewards);
+
+        emit Rebase(getTotalPooledEther(), tETH.totalShares());
+    }
+
+    /// @notice sending ETH to user
+    /// @param _recipient address of receiver
+    /// @param _amount amount of ETH, which should be send
+    function _sendFund(address _recipient, uint256 _amount) internal {
+        uint256 balance = address(this).balance;
+        (bool sent, ) = _recipient.call{value: _amount}("");
+        require(sent && address(this).balance == balance - _amount, "SendFail");
+    }
+
 }
