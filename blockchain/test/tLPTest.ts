@@ -83,6 +83,30 @@ describe("TLP", function () {
       expect(await tETH.shares(firstAccount.address)).to.be.equal(ethers.parseEther("0.6"))
     });
 
+    it("Should be 1/2 their shares, when two person mints same amount, negative rebase happened", async function() {
+      const {managerAddress, accounts, otherAccount, lp, tETH} = await loadFixture(deployOneYearLockFixture);
+
+      const firstAccount = accounts[1]
+      const secondAccount = accounts[2]
+      const thirdAccount = accounts[3]
+
+      await lp.connect(firstAccount).deposit({value: ethers.parseEther("1")})
+      await lp.connect(secondAccount).deposit({value: ethers.parseEther("1")})
+
+      // 10 ETH rebase happened
+      await lp.connect(managerAddress).rebase(ethers.parseEther("10"));
+
+      expect(await tETH.shares(secondAccount.address))
+          .to.be.equal(await tETH.shares(firstAccount.address))
+      expect(await tETH.balanceOf(firstAccount.address)).to.be.equal(ethers.parseEther("6"))
+
+      // -2 ETH rebased happend
+      await lp.connect(managerAddress).rebase(ethers.parseEther("-2"));
+
+      expect(await tETH.balanceOf(firstAccount.address)).to.be.equal(ethers.parseEther("5"))
+      expect(await tETH.balanceOf(secondAccount.address)).to.be.equal(ethers.parseEther("5"))
+    });
+
   });
 
 });
