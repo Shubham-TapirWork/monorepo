@@ -46,7 +46,7 @@ contract WtETH is ERC20, IWtETH, Ownable {
         return tETHAmount;
     }
 
-    function getTETHByWeETH(uint256 _wtETH) external view returns (uint256) {
+    function getTETHByWtETH(uint256 _wtETH) external view returns (uint256) {
         return liquidityPool.amountForShare(_wtETH);
     }
 
