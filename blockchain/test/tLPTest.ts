@@ -138,7 +138,7 @@ describe("TLP", function () {
 
 
         // after wrapping the half of their amount, both user's share should be 0.5, and wpETH shares should be 1
-        expect(await tETH.shares(secondAccount.address))
+        expect(await tETH.shares(firstAccount.address))
           .to.be.equal(ethers.parseEther("0.5"))
         expect(await tETH.shares(secondAccount.address))
           .to.be.equal(ethers.parseEther("0.5"))
@@ -150,6 +150,10 @@ describe("TLP", function () {
         expect(await tETH.balanceOf(firstAccount.address)).to.be.equal(ethers.parseEther("3"))
         expect(await tETH.balanceOf(secondAccount.address)).to.be.equal(ethers.parseEther("3"))
 
+        expect(await wTETH.balanceOf(firstAccount.address))
+            .to.be.equal(ethers.parseEther("0.5"));
+        expect(await wTETH.balanceOf(secondAccount.address))
+            .to.be.equal(ethers.parseEther("0.5"));
     });
 
       it("should fail if user didn't give allowance", async function() {
@@ -169,8 +173,7 @@ describe("TLP", function () {
             .to.be.revertedWith("TETH: TRANSFER_AMOUNT_EXCEEDS_ALLOWANCE")
         await expect(wTETH.connect(secondAccount).wrap(ethers.parseEther("3")))
             .to.be.revertedWith("TETH: TRANSFER_AMOUNT_EXCEEDS_ALLOWANCE")
-
-    });
+      });
 
       it("After deposit 1 ETH 3 user, then trying to wrap 2 user, and checking wrap/unwrap", async function() {
         const {wTETH,managerAddress, accounts, otherAccount, lp, tETH} = await loadFixture(deployOneYearLockFixture);
@@ -198,7 +201,7 @@ describe("TLP", function () {
 
 
         // after wrapping the half of their amount, both user's share should be 1.5, and wpETH shares should be 3
-        expect(await tETH.shares(secondAccount.address))
+        expect(await tETH.shares(firstAccount.address))
           .to.be.equal(ethers.parseEther("1.5"))
         expect(await tETH.shares(secondAccount.address))
           .to.be.equal(ethers.parseEther("1.5"))
@@ -210,6 +213,24 @@ describe("TLP", function () {
         expect(await tETH.balanceOf(firstAccount.address)).to.be.equal(ethers.parseEther("3"))
         expect(await tETH.balanceOf(secondAccount.address)).to.be.equal(ethers.parseEther("3"))
 
+        expect(await wTETH.balanceOf(firstAccount.address))
+            .to.be.equal(ethers.parseEther("1.5"));
+        expect(await wTETH.balanceOf(secondAccount.address))
+            .to.be.equal(ethers.parseEther("1.5"));
+
+        await wTETH.connect(firstAccount).unwrap(ethers.parseEther("0.5"))
+
+        // when unwrapping 0.5 wtETH, the balance should be 5
+        expect(await tETH.balanceOf(wTETH.target))
+            .to.be.equal(ethers.parseEther("5"))
+        expect(await tETH.balanceOf(firstAccount.address))
+            .to.be.equal(ethers.parseEther("4"))
+
+        await wTETH.connect(secondAccount).unwrap(ethers.parseEther("0.5"))
+        expect(await tETH.balanceOf(wTETH.target))
+            .to.be.equal(ethers.parseEther("4"))
+        expect(await tETH.balanceOf(secondAccount.address))
+            .to.be.equal(ethers.parseEther("4"))
     });
 
   });
