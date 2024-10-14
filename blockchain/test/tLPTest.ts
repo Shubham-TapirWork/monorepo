@@ -175,7 +175,7 @@ describe("TLP", function () {
             .to.be.revertedWith("TETH: TRANSFER_AMOUNT_EXCEEDS_ALLOWANCE")
       });
 
-      it("After deposit 1 ETH 3 user, then trying to wrap 2 user, and checking wrap/unwrap", async function() {
+      it("After deposit 3 ETH for three users and rebasing by 100%, trying to wrap 3 tETH user, and checking wrap/unwrap giving correct amounts", async function() {
         const {wTETH,managerAddress, accounts, otherAccount, lp, tETH} = await loadFixture(deployOneYearLockFixture);
 
         const firstAccount = accounts[1]
@@ -186,16 +186,18 @@ describe("TLP", function () {
         await lp.connect(secondAccount).deposit({value: ethers.parseEther("3")})
         await lp.connect(thirdAccount).deposit({value: ethers.parseEther("3")})
 
-        // 10 ETH rebase happened
+        // 9 ETH rebase happened now every user should have double the funds - 6 tETH, since (9 -> 18)
         await lp.connect(managerAddress).rebase(ethers.parseEther("9"));
         expect(await tETH.balanceOf(firstAccount.address)).to.be.equal(ethers.parseEther("6"))
 
+        // 1 wtETH = 2 tETH
         await tETH.connect(firstAccount).approve(wTETH.target, ethers.parseEther("3"))
         await tETH.connect(secondAccount).approve(wTETH.target, ethers.parseEther("3"))
 
         expect(await tETH.shares(secondAccount.address))
           .to.be.equal(ethers.parseEther("3"))
 
+        // wrapping should give 50% of wtETH 
         await wTETH.connect(firstAccount).wrap(ethers.parseEther("3"))
         await wTETH.connect(secondAccount).wrap(ethers.parseEther("3"))
 
