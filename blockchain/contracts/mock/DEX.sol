@@ -34,11 +34,11 @@ contract DEX {
 		uint256 ethOutput
 	);
 
-  constructo(address tokenAddr) {
+  	constructor (address tokenAddr) {
 		token = IERC20(tokenAddr); 
 	}
  
- function init(uint256 tokens) public payable returns (uint256) {}
+ 	function init(uint256 tokens) public payable returns (uint256) {}
 
 	function price(
 		uint256 xInput,
