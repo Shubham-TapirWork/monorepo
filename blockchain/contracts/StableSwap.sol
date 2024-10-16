@@ -3,27 +3,6 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/*
-Invariant - price of trade and amount of liquidity are determined by this equation
-
-An^n sum(x_i) + D = ADn^n + D^(n + 1) / (n^n prod(x_i))
-
-Topics
-0. Newton's method x_(n + 1) = x_n - f(x_n) / f'(x_n)
-1. Invariant
-2. Swap
-   - Calculate Y
-   - Calculate D
-3. Get virtual price
-4. Add liquidity
-   - Imbalance fee
-5. Remove liquidity
-6. Remove liquidity one token
-   - Calculate withdraw one token
-   - getYD
-TODO: test?
-*/
-
 library Math {
     function abs(uint256 x, uint256 y) internal pure returns (uint256) {
         return x >= y ? x - y : y - x;
