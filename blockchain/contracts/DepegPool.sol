@@ -12,12 +12,19 @@ import "./interfaces/IYBwtETH.sol";
 
 contract DepegPool {
 
+    // this is only for testing purposes, in future there should be some price oracle or something
+    uint256 public sharePrice = 100;
+
     string public name;
     IWtETH public immutable wtETH;
     IDPwtETH public immutable DP_wtETH;
     IYBwtETH public immutable YB_wtETH;
     uint256 public poolActiveDuration;
     uint256 public startSharePrice;
+    bool public DepegResolved;
+    bool public poolIsDepegged;
+    uint256 public depegSize;
+    uint256 public constant depegDecimal = 5;
 
     // start time in secs
     uint256 public startTime;
@@ -60,6 +67,36 @@ contract DepegPool {
     }
 
     function currentSharePrice() public view returns(uint256) {
-        return 123;
+        return sharePrice;
     }
+
+    function setSharePrice(uint256 _sharePrice) external {
+        sharePrice = _sharePrice;
+    }
+
+    function resolvePriceDepeg() public {
+        require(!checkPoolIsActive(), "the pool is still active");
+        require(!DepegResolved, "the depeg is already resolved");
+        if(startSharePrice > currentSharePrice()){
+            depegSize = 10**depegDecimal - currentSharePrice() * 10**depegDecimal / startSharePrice;
+            poolIsDepegged = true;
+        }
+        DepegResolved = true;
+    }
+
+    function redeemTokens(uint256 _amountYB,uint256 _amountDP) public {
+        require(DepegResolved, "the depeg is not resolved");
+
+        uint256 _amountWtETHtoSend = 0;
+        if(poolIsDepegged = false) {
+            _amountWtETHtoSend = _amountYB + _amountDP;
+        }
+        else if (poolIsDepegged) {
+            _amountWtETHtoSend = _amountDP + (_amountDP * depegSize) / depegDecimal
+                + _amountYB - (_amountYB * depegSize) / depegDecimal;
+        }
+
+        wtETH.transfer(msg.sender, _amountWtETHtoSend);
+    }
+
 }
