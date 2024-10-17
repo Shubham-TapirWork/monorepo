@@ -18,6 +18,9 @@ contract DepegPool {
     // Name of the pool.
     string public name;
 
+    /// Address of the liquidity pool contract managing Ether.
+    ILiquidityPool public liquidityPool;
+
     // Address of the wrapped Ether token (wtETH).
     IWtETH public immutable wtETH;
 
@@ -57,6 +60,7 @@ contract DepegPool {
      * @param _name Name of the pool.
      */
     constructor(
+        address _tPool,
         address _wtETH,
         address _DP_wtETH,
         address _YB_wtETH,
@@ -64,6 +68,7 @@ contract DepegPool {
         string memory _name
     )
     {
+        liquidityPool = ILiquidityPool(_tPool);
         wtETH = IWtETH(_wtETH);
         DP_wtETH = IDPwtETH(_DP_wtETH);
         YB_wtETH = IYBwtETH(_YB_wtETH);
@@ -115,16 +120,7 @@ contract DepegPool {
      * @return uint256 The current share price.
      */
     function currentSharePrice() public view returns (uint256) {
-        return sharePrice;
-    }
-
-    /**
-     * @dev Sets a new share price.
-     * This function can be used to simulate price changes during testing.
-     * @param _sharePrice The new share price to set.
-     */
-    function setSharePrice(uint256 _sharePrice) external {
-        sharePrice = _sharePrice;
+        return liquidityPool.amountForShare(1 ether);
     }
 
     /**
