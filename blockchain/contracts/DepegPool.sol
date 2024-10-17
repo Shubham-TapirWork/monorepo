@@ -128,7 +128,7 @@ contract DepegPool {
      * @dev Resolves the price depeg issue by calculating the depeg size.
      * This function can only be called once the pool is inactive and not previously resolved.
      */
-    function resolvePriceDepeg() public {
+    function resolvePriceDepeg() external {
         require(!checkPoolIsActive(), "DepegPool: the pool is still active");
         require(!DepegResolved, "DepegPool: the depeg is already resolved");
 
@@ -145,7 +145,7 @@ contract DepegPool {
      * @param _amountYB Amount of YB_wtETH to redeem.
      * @param _amountDP Amount of DP_wtETH to redeem.
      */
-    function redeemTokens(uint256 _amountYB, uint256 _amountDP) public {
+    function redeemTokens(uint256 _amountYB, uint256 _amountDP) external {
         require(DepegResolved, "DepegPool: the depeg is not resolved");
 
         uint256 _amountWtETHtoSend = 0;
