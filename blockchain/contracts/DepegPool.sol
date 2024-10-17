@@ -79,11 +79,13 @@ contract DepegPool {
      * @param _amount Amount of wtETH to split.
      */
     function splitToken(uint256 _amount) external {
+        require(_amount > 0, "DepegPool: no zero amount");
         require(checkPoolIsActive(), "DepegPool: pool isn't active");
 
+
+        wtETH.transferFrom(msg.sender, address(this), _amount);
         DP_wtETH.mint(msg.sender, _amount / 2);
         YB_wtETH.mint(msg.sender, _amount / 2);
-        wtETH.transferFrom(msg.sender, address(this), _amount);
     }
 
     /**
@@ -92,6 +94,7 @@ contract DepegPool {
      * @param _amount Total amount of tokens (DP + YB) to un-split into wtETH.
      */
     function unSplitToken(uint256 _amount) external {
+        require(_amount > 0, "DepegPool: no zero amount");
         require(checkPoolIsActive(), "DepegPool: pool isn't active");
 
         DP_wtETH.burn(msg.sender, _amount / 2);
