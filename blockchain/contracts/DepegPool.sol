@@ -157,8 +157,8 @@ contract DepegPool {
         // If depeg occurred, adjust redemption amounts based on depeg size.
         else if (poolIsDepegged) {
             _amountWtETHtoSend =
-                _amountDP + (_amountDP * depegSize) / depegDecimal +
-                _amountYB - (_amountYB * depegSize) / depegDecimal;
+                _amountDP + (_amountDP * depegSize) / 10**depegDecimal +
+                _amountYB - (_amountYB * depegSize) / 10**depegDecimal;
         }
 
         wtETH.transfer(msg.sender, _amountWtETHtoSend);
