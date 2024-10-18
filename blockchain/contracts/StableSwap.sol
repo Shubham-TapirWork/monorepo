@@ -239,6 +239,7 @@ contract StableSwap {
         returns (uint256 dy)
     {
         require(i != j, "i = j");
+        require(dx <= IERC20(tokens[j]).balanceOf(address(this)), "Amount more than liquidity");
 
         IERC20(tokens[i]).transferFrom(msg.sender, address(this), dx);
 
@@ -264,9 +265,10 @@ contract StableSwap {
     }
 
     function addLiquidity(uint256[N] calldata amounts, uint256 minShares)
-        external
-        returns (uint256 shares)
+        public
+        returns (uint256)
     {
+        uint256 shares;
         // calculate current liquidity d0
         uint256 _totalSupply = totalSupply;
         uint256 d0;
@@ -297,7 +299,6 @@ contract StableSwap {
         uint256 d2;
         if (_totalSupply > 0) {
             for (uint256 i; i < N; ++i) {
-                // TODO: why old_xs[i] * d1 / d0? why not d1 / N?
                 uint256 idealBalance = (old_xs[i] * d1) / d0;
                 uint256 diff = Math.abs(new_xs[i], idealBalance);
                 new_xs[i] -= (LIQUIDITY_FEE * diff) / FEE_DENOMINATOR;
@@ -322,6 +323,8 @@ contract StableSwap {
         }
         require(shares >= minShares, "shares < min");
         _mint(msg.sender, shares);
+        
+        return shares;
     }
 
     function removeLiquidity(uint256 shares, uint256[N] calldata minAmountsOut)
