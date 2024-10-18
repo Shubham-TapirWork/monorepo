@@ -12,9 +12,6 @@ import "./interfaces/IYBwtETH.sol";
 
 contract DepegPool {
 
-    // Testing-only placeholder for share price; replace with a price oracle in production.
-    uint256 public sharePrice = 100;
-
     // Name of the pool.
     string public name;
 
@@ -104,7 +101,7 @@ contract DepegPool {
 
         DP_wtETH.burn(msg.sender, _amount / 2);
         YB_wtETH.burn(msg.sender, _amount / 2);
-        wtETH.transferFrom(address(this), msg.sender, _amount);
+        wtETH.transfer(msg.sender, _amount);
     }
 
     /**
@@ -154,7 +151,7 @@ contract DepegPool {
             _amountWtETHtoSend = _amountYB + _amountDP;
         }
         // If depeg occurred, adjust redemption amounts based on depeg size.
-        else if (poolIsDepegged) {
+        else {
             _amountWtETHtoSend =
                 _amountDP + (_amountDP * depegSize) / 10**depegDecimal +
                 _amountYB - (_amountYB * depegSize) / 10**depegDecimal;

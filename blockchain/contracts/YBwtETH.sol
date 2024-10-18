@@ -2,6 +2,7 @@
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";  // Standard ERC20 implementation from OpenZeppelin.
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./interfaces/IYBwtETH.sol";  // Interface for the YB_wtETH token.
 import "./interfaces/IDepegPool.sol";  // Interface for interacting with the DepegPool contract.
@@ -11,7 +12,7 @@ import "./interfaces/IDepegPool.sol";  // Interface for interacting with the Dep
  * @dev ERC20-based token representing the yield-bearing version of wtETH (YB_wtETH).
  *      This contract allows only the DepegPool to mint and burn tokens.
  */
-contract YBwtETH is ERC20, IYBwtETH {
+contract YBwtETH is ERC20, IYBwtETH, Ownable {
 
     /// @notice Address of the DepegPool contract managing mint and burn operations.
     IDepegPool public depegPool;
@@ -20,17 +21,22 @@ contract YBwtETH is ERC20, IYBwtETH {
      * @dev Constructor initializes the token with a name, symbol, and the associated DepegPool contract.
      * @param _name The name of the token.
      * @param _symbol The symbol of the token.
-     * @param _depegPool Address of the DepegPool contract responsible for managing this token.
      */
     constructor(
         string memory _name,
-        string memory _symbol,
-        address _depegPool
+        string memory _symbol
     )
         ERC20(_name, _symbol)  // Initialize the ERC20 token with the provided name and symbol.
+        Ownable(msg.sender)
     {
-        require(_depegPool != address(0), "YBwtETH: No zero addresses");  // Ensure a valid DepegPool address.
-        depegPool = IDepegPool(_depegPool);  // Assign the DepegPool contract to the state variable.
+    }
+
+    /// @notice Allows owner to set DPpool address
+    /// @dev sets _depegPool contract address to ERC20, only owner can call this contract
+    /// @param _depegPool tETH address
+    function setContractDepegPool(address _depegPool) external onlyOwner {
+        require(address(_depegPool) != address(0), "YB: already exists");
+        depegPool = IDepegPool(_depegPool);
     }
 
     /**

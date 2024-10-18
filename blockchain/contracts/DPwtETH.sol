@@ -2,6 +2,9 @@
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";  // Standard ERC20 contract from OpenZeppelin.
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+
 import "./interfaces/IYBwtETH.sol";  // Interface for the yield-bearing wtETH (YB_wtETH).
 import "./interfaces/IDepegPool.sol";  // Interface for interacting with the DepegPool contract.
 
@@ -10,7 +13,7 @@ import "./interfaces/IDepegPool.sol";  // Interface for interacting with the Dep
  * @dev ERC20-based token representing the depegged version of wtETH (DP_wtETH).
  *      This contract allows the DepegPool to mint and burn DP_wtETH tokens.
  */
-contract DPwtETH is ERC20, IYBwtETH {
+contract DPwtETH is ERC20, IYBwtETH, Ownable {
 
     /// @notice Address of the DepegPool contract that manages minting and burning.
     IDepegPool public depegPool;
@@ -19,17 +22,22 @@ contract DPwtETH is ERC20, IYBwtETH {
      * @dev Constructor initializes the ERC20 token and assigns the depeg pool contract.
      * @param _name The name of the token.
      * @param _symbol The symbol of the token.
-     * @param _depegPool Address of the DepegPool contract.
      */
     constructor(
         string memory _name,
-        string memory _symbol,
-        address _depegPool
+        string memory _symbol
     )
         ERC20(_name, _symbol)  // Initialize the ERC20 token with name and symbol.
+        Ownable(msg.sender)
     {
-        require(_depegPool != address(0), "DPwtETH: No zero addresses");  // Ensure a valid pool address.
-        depegPool = IDepegPool(_depegPool);  // Assign the pool contract.
+    }
+
+    /// @notice Allows owner to set DPpool address
+    /// @dev sets _depegPool contract address to ERC20, only owner can call this contract
+    /// @param _depegPool tETH address
+    function setContractDepegPool(address _depegPool) external onlyOwner {
+        require(address(_depegPool) != address(0), "DP: already exists");
+        depegPool = IDepegPool(_depegPool);
     }
 
     /**
