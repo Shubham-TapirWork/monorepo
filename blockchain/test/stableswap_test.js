@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 
 describe("Stable Swap tests", function () {
   let stableSwap, tokenA, tokenB;
-  let owner, addr1;
+  let owner, addr1, addr2;
 
   beforeEach(async function () {
     [owner, addr1, addr2] = await ethers.getSigners();
