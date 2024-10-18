@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract Balloons is ERC20 {
+contract Token is ERC20 {
   construct() ERC20("Anytoken", "ANT") {
     _mint(msg.sender, 1000 ether);
   }
