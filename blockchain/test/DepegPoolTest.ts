@@ -158,9 +158,11 @@ describe("DepegPool, YB, and DP Tests", function () {
 
         await depegPool.resolvePriceDepeg();
 
-        console.log(await depegPool.depegSize())
-        console.log(await depegPool.currentSharePrice())
-        console.log(await depegPool.startSharePrice())
+        // should revert if someone tries to redeem more amount, than he have
+        await expect(depegPool.connect(firstAccount).redeemTokens(amount, amount))
+          .to.be.revertedWithCustomError(YB_wtETH, "ERC20InsufficientBalance")
+        await expect(depegPool.connect(firstAccount).redeemTokens(0, amount + BigInt(1)))
+          .to.be.revertedWithCustomError(DP_wtETH, "ERC20InsufficientBalance")
 
         await depegPool.connect(firstAccount).redeemTokens(0, amount); // redeeming 1 DP
         await depegPool.connect(secondAccount).redeemTokens(amount, 0); // redeeming equal parts 1 YB
