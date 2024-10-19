@@ -71,7 +71,7 @@ describe("DepegPool, YB, and DP Tests", function () {
         expect(await wTETH.balanceOf(firstAccount.address)).to.equal(splitAmount);
     });
 
-    it("Should allow redeeming tokens for wtETH after resolving depeg", async function () {
+    it("Should allow redeeming tokens for wtETH after resolving depeg, depeg isn't happening", async function () {
         const { accounts, wTETH, depegPool } = await deployAdditionalFixtures();
         const firstAccount = accounts[1];
         const amount = ethers.parseEther("1");
@@ -122,6 +122,62 @@ describe("DepegPool, YB, and DP Tests", function () {
 
         await expect(DP_wtETH.connect(firstAccount).mint(firstAccount.address, ethers.parseEther("100")))
           .to.be.revertedWith("DPwtETH: Only depeg pool contract function");
+    });
+
+    it("Should allow redeeming tokens for wtETH after resolving depeg, 10% depeg is happening", async function () {
+        const { accounts, wTETH, depegPool, lp, YB_wtETH, DP_wtETH } = await deployAdditionalFixtures();
+        const [firstAccount, secondAccount, thirdAccount] = accounts;
+        const amount = ethers.parseEther("1");
+
+        // start share is 1
+        await lp.setShare(ethers.parseEther("1"));
+
+        // giving 3 of them 1 wtETH and then splitting
+        await wTETH.mint(firstAccount.address, amount);
+        await wTETH.mint(secondAccount.address, amount);
+        await wTETH.mint(thirdAccount.address, amount);
+        await wTETH.connect(firstAccount).approve(depegPool.target, amount);
+        await wTETH.connect(secondAccount).approve(depegPool.target, amount);
+        await wTETH.connect(thirdAccount).approve(depegPool.target, amount);
+        await depegPool.connect(firstAccount).splitToken(amount);
+        await depegPool.connect(secondAccount).splitToken(amount);
+        await depegPool.connect(thirdAccount).splitToken(amount);
+        // splitting happened all have 0.5, 0.5
+
+        // transferring correctly
+        // we have 3 user 1 - will have (1DP, 0YB), 2 - (0 DP, 1 YB), 3 - (0.5 DP, 0.5 YB)
+        await YB_wtETH.connect(firstAccount).transfer(secondAccount.address, amount / BigInt(2));
+        await DP_wtETH.connect(secondAccount).transfer(firstAccount.address, amount / BigInt(2))
+
+        // 10 % depeg is going
+        await lp.setShare(ethers.parseEther("0.9"));
+
+        // Simulate resolving a depeg, the situation when price has not changed or >= currentShares
+        await network.provider.send("evm_increaseTime", [lpTime]);
+        await network.provider.send("evm_mine");
+
+        await depegPool.resolvePriceDepeg();
+
+        console.log(await depegPool.depegSize())
+        console.log(await depegPool.currentSharePrice())
+        console.log(await depegPool.startSharePrice())
+
+        await depegPool.connect(firstAccount).redeemTokens(0, amount); // redeeming 1 DP
+        await depegPool.connect(secondAccount).redeemTokens(amount, 0); // redeeming equal parts 1 YB
+        await depegPool.connect(thirdAccount).redeemTokens(amount / BigInt(2), amount / BigInt(2)); // redeeming equal parts of YB and DP
+
+        // The first accounts redeem should be 1.1 wtETH
+        expect(await wTETH.balanceOf(firstAccount.address))
+          .to.be.equal(amount + amount * BigInt(10) / BigInt(100));
+
+        // The second accounts redeem should be 0.9 wtETH
+        expect(await wTETH.balanceOf(secondAccount.address))
+          .to.be.equal(amount - amount * BigInt(10) / BigInt(100));
+
+        // The third accounts redeem should be 1 wtETH
+        expect(await wTETH.balanceOf(thirdAccount.address))
+          .to.be.equal(amount);
+
     });
 
 });

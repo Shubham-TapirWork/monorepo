@@ -5,7 +5,7 @@ import "../interfaces/ItETH.sol";
 
 contract LPMock {
     uint256 public totalPooledEther = 1000 ether;
-    uint256 public share = 100 ether;
+    uint256 public share = 1 ether;
     mapping(address => uint256) public shares;
 
     function amountForShare(uint256 _share) public returns (uint256) {

@@ -157,6 +157,8 @@ contract DepegPool {
                 _amountYB - (_amountYB * depegSize) / 10**depegDecimal;
         }
 
+        YB_wtETH.burn(msg.sender, _amountYB);
+        DP_wtETH.burn(msg.sender, _amountDP);
         wtETH.transfer(msg.sender, _amountWtETHtoSend);
     }
 }
