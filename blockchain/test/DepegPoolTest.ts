@@ -226,11 +226,11 @@ describe("DepegPool, YB, and DP Tests", function () {
         await depegPool.connect(secondAccount).redeemTokens(amount, 0); // redeeming equal parts 1 YB
         await depegPool.connect(thirdAccount).redeemTokens(amount / BigInt(2), amount / BigInt(2)); // redeeming equal parts of YB and DP
 
-        // The first accounts redeem should be 1.1 wtETH
+        // The first accounts redeem should be 1.2 wtETH
         expect(await wTETH.balanceOf(firstAccount.address))
           .to.be.equal(amount + amount * BigInt(20) / BigInt(100));
 
-        // The second accounts redeem should be 0.9 wtETH
+        // The second accounts redeem should be 0.8 wtETH
         expect(await wTETH.balanceOf(secondAccount.address))
           .to.be.equal(amount - amount * BigInt(20) / BigInt(100));
 
