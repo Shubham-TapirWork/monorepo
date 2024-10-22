@@ -65,7 +65,7 @@ contract StableSwap {
     }
 
     function unfreezeSwap() public onlyManager(){
-        require(freeze == false, "The contract is not frozen");
+        require(freeze == true, "The contract is not frozen");
         freeze = true;
     }
 
