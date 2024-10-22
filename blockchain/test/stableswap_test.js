@@ -200,4 +200,43 @@ describe("Stable Swap tests", function () {
         to.be.revertedWith("dy < min");
     });
   });
+
+  describe("freeze + tradingActive", async function () {
+    it("Successfully freeze", async function () {
+      stableSwap.connect(owner).freezeSwap();
+    });
+
+    it("Successfully unfreeze", async function () {
+      await stableSwap.connect(owner).freezeSwap();
+      stableSwap.connect(owner).unfreezeSwap();
+    });
+
+    it("Fail to unfreeze", async function () {
+      expect(stableSwap.connect(owner).unfreezeSwap()).to.be.revertedWith("The contract is not frozen");
+    });
+
+    it("You are not the pool deployer", async function () {
+      expect(stableSwap.connect(addr1).freezeSwap()).to.be.revertedWith("You are not the pool deployer");
+    });
+
+    it("Fail to swap when freeze", async function () {
+      await stableSwap.connect(owner).freezeSwap();
+      expect(stableSwap.connect(owner).swap(0, 1, 10_000, 9_000)).to.be.revertedWith("Swap is frozen temporarily");
+    });
+
+    it("Success swap when unfreeze", async function () {
+      await stableSwap.connect(owner).freezeSwap();
+      await stableSwap.connect(owner).unfreezeSwap();
+      stableSwap.connect(owner).swap(0, 1, 10_000, 9_000);
+    });
+
+    it("Successfully end trading", async function () {
+      stableSwap.connect(owner).endTrading();
+    });
+
+    it("Can`t swap when end trading", async function () {
+      await stableSwap.connect(owner).endTrading();
+      expect(stableSwap.connect(owner).swap(0, 1, 10_000, 9_000)).to.be.revertedWith("Trading is not active");
+    });
+  });
 });
