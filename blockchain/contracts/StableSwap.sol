@@ -57,16 +57,16 @@ contract StableSwap {
     }
 
     function freezeSwap() public onlyManager(){
+        freeze = true;
+    }
+
+    function unfreezeSwap() public onlyManager(){
+        require(freeze == true, "The contract is not frozen");
         freeze = false;
     }
 
     function endTrading() public onlyManager(){
         tradingActive = false;
-    }
-
-    function unfreezeSwap() public onlyManager(){
-        require(freeze == true, "The contract is not frozen");
-        freeze = true;
     }
 
     function _burn(address _from, uint256 _amount) private {
@@ -293,7 +293,6 @@ contract StableSwap {
         public
         returns (uint256)
     {
-        require(tradingActive == true, "Trading is not active");
         uint256 shares;
         // calculate current liquidity d0
         uint256 _totalSupply = totalSupply;
