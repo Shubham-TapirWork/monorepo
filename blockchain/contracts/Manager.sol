@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import {YBwtETH} from "./YBwtETH.sol";
 import {DPwtETH} from "./DPwtETH.sol";
 import {DepegPool} from "./DepegPool.sol";
+import {StableSwap} from "./StableSwap.sol";
 
 
 contract Manager is Ownable {
@@ -13,6 +14,7 @@ contract Manager is Ownable {
         address yb_wtETH;
         address dp_wtETH;
         address depegPool;
+        address swap;
     }
 
     Depeg[] public depegModule;
@@ -46,8 +48,14 @@ contract Manager is Ownable {
         yb.setContractDepegPool(address(depegPool));
         dp.setContractDepegPool(address(depegPool));
 
+        StableSwap swap = new StableSwap([address(yb), address(dp)]);
+
         depegModule.push(
-            Depeg(address(yb), address(dp), address(depegPool))
+                Depeg(address(yb),
+                address(dp),
+                address(depegPool),
+                address(swap)
+            )
         );
     }
 
