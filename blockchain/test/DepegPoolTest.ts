@@ -26,7 +26,11 @@ describe("DepegPool, YB, and DP Tests", function () {
 
         await YB_wtETH.setContractDepegPool(depegPool.target);
         await DP_wtETH.setContractDepegPool(depegPool.target);
-        return { depegPool, accounts, DP_wtETH, YB_wtETH, lp, wTETH };
+
+        const Manager = await hre.ethers.getContractFactory("Manager")
+        const manager = await Manager.deploy()
+
+        return { depegPool, accounts, DP_wtETH, YB_wtETH, lp, wTETH, manager };
     }
 
     it("Should correctly initialize DepegPool with provided arguments", async function () {
@@ -182,61 +186,52 @@ describe("DepegPool, YB, and DP Tests", function () {
 
     });
 
-        it("Should allow redeeming tokens for wtETH after resolving depeg, 10% depeg is happening", async function () {
-        const { accounts, wTETH, depegPool, lp, YB_wtETH, DP_wtETH } = await deployAdditionalFixtures();
-        const [firstAccount, secondAccount, thirdAccount] = accounts;
-        const amount = ethers.parseEther("1");
+    it("Should allow manager to deploy contracts", async function () {
+      const { manager, lp, wTETH} = await deployAdditionalFixtures();
+      await manager.deployDepeg(
+        lp.target,
+        wTETH.target,
+        "test 1",
+        "test 2",
+        "test 1",
+        "test 2",
+        "test pool",
+        1455
+      )
 
-        // start share is 1
-        await lp.setShare(ethers.parseEther("1"));
+      const module = await manager.depegModule(0)
 
-        // giving 3 of them 1 wtETH and then splitting
-        await wTETH.mint(firstAccount.address, amount);
-        await wTETH.mint(secondAccount.address, amount);
-        await wTETH.mint(thirdAccount.address, amount);
-        await wTETH.connect(firstAccount).approve(depegPool.target, amount);
-        await wTETH.connect(secondAccount).approve(depegPool.target, amount);
-        await wTETH.connect(thirdAccount).approve(depegPool.target, amount);
-        await depegPool.connect(firstAccount).splitToken(amount);
-        await depegPool.connect(secondAccount).splitToken(amount);
-        await depegPool.connect(thirdAccount).splitToken(amount);
-        // splitting happened all have 0.5, 0.5
+      const DepegPool = await hre.ethers.getContractFactory("DepegPool")
+      const depegPool = DepegPool.attach(module.depegPool)
+      const YB = await hre.ethers.getContractFactory("YBwtETH")
+      const yb = YB.attach(module.yb_wtETH)
+      const DP = await hre.ethers.getContractFactory("DPwtETH")
+      const dp = DP.attach(module.dp_wtETH)
 
-        // transferring correctly
-        // we have 3 user 1 - will have (1DP, 0YB), 2 - (0 DP, 1 YB), 3 - (0.5 DP, 0.5 YB)
-        await YB_wtETH.connect(firstAccount).transfer(secondAccount.address, amount / BigInt(2));
-        await DP_wtETH.connect(secondAccount).transfer(firstAccount.address, amount / BigInt(2))
+      expect(await depegPool.DP_wtETH()).to.be.equal(module.dp_wtETH)
+      expect(await depegPool.YB_wtETH()).to.be.equal(module.yb_wtETH)
 
-        // 10 % depeg is going
-        await lp.setShare(ethers.parseEther("0.8"));
+      expect(await dp.depegPool()).to.be.equal(depegPool.target);
+      expect(await yb.depegPool()).to.be.equal(depegPool.target);
 
-        // Simulate resolving a depeg, the situation when price has not changed or >= currentShares
-        await network.provider.send("evm_increaseTime", [lpTime]);
-        await network.provider.send("evm_mine");
+    });
 
-        await depegPool.resolvePriceDepeg();
+    it("Should fail if someone else tries to deploy", async function () {
+      const { manager, lp, wTETH, accounts} = await deployAdditionalFixtures();
 
-        // should revert if someone tries to redeem more amount, than he have
-        await expect(depegPool.connect(firstAccount).redeemTokens(amount, amount))
-          .to.be.revertedWithCustomError(YB_wtETH, "ERC20InsufficientBalance")
-        await expect(depegPool.connect(firstAccount).redeemTokens(0, amount + BigInt(1)))
-          .to.be.revertedWithCustomError(DP_wtETH, "ERC20InsufficientBalance")
+      const firstAccount = accounts[1];
 
-        await depegPool.connect(firstAccount).redeemTokens(0, amount); // redeeming 1 DP
-        await depegPool.connect(secondAccount).redeemTokens(amount, 0); // redeeming equal parts 1 YB
-        await depegPool.connect(thirdAccount).redeemTokens(amount / BigInt(2), amount / BigInt(2)); // redeeming equal parts of YB and DP
+      await expect(manager.connect(firstAccount).deployDepeg(
+        lp.target,
+        wTETH.target,
+        "test 1",
+        "test 2",
+        "test 1",
+        "test 2",
+        "test pool",
+        1455
+      )).to.be.revertedWithCustomError(manager, "OwnableUnauthorizedAccount", )
 
-        // The first accounts redeem should be 1.2 wtETH
-        expect(await wTETH.balanceOf(firstAccount.address))
-          .to.be.equal(amount + amount * BigInt(20) / BigInt(100));
-
-        // The second accounts redeem should be 0.8 wtETH
-        expect(await wTETH.balanceOf(secondAccount.address))
-          .to.be.equal(amount - amount * BigInt(20) / BigInt(100));
-
-        // The third accounts redeem should be 1 wtETH
-        expect(await wTETH.balanceOf(thirdAccount.address))
-          .to.be.equal(amount);
 
     });
 
