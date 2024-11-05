@@ -17,11 +17,11 @@ const config: HardhatUserConfig = {
     enabled: true,
   },
   networks: {
-    // sepolia: {
-    //   chainId: 11155111,
-    //   url: process.env.SEPOLIA_URL,
-    //   accounts: [process.env.ACCOUNT_PRIVATE_KEY],
-    // },
+    sepolia: {
+      chainId: 11155111,
+      url: process.env.SEPOLIA_URL,
+      accounts: [process.env.ACCOUNT_PRIVATE_KEY],
+    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
