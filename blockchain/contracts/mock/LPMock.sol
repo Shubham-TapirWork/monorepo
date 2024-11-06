@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.27;
 
 import "../interfaces/ItETH.sol";
@@ -24,7 +24,9 @@ contract LPMock {
         return totalPooledEther;
     }
 
-    function getTotalEtherClaimOf(address _user) external view returns (uint256) {
+    function getTotalEtherClaimOf(
+        address _user
+    ) external view returns (uint256) {
         return shares[_user]; // Simplified mock logic
     }
 

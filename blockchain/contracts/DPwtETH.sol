@@ -1,12 +1,11 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.27;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";  // Standard ERC20 contract from OpenZeppelin.
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol"; // Standard ERC20 contract from OpenZeppelin.
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
-import "./interfaces/IYBwtETH.sol";  // Interface for the yield-bearing wtETH (YB_wtETH).
-import "./interfaces/IDepegPool.sol";  // Interface for interacting with the DepegPool contract.
+import "./interfaces/IYBwtETH.sol"; // Interface for the yield-bearing wtETH (YB_wtETH).
+import "./interfaces/IDepegPool.sol"; // Interface for interacting with the DepegPool contract.
 
 /**
  * @title DPwtETH
@@ -14,7 +13,6 @@ import "./interfaces/IDepegPool.sol";  // Interface for interacting with the Dep
  *      This contract allows the DepegPool to mint and burn DP_wtETH tokens.
  */
 contract DPwtETH is ERC20, IYBwtETH, Ownable {
-
     /// @notice Address of the DepegPool contract that manages minting and burning.
     IDepegPool public depegPool;
 
@@ -27,10 +25,9 @@ contract DPwtETH is ERC20, IYBwtETH, Ownable {
         string memory _name,
         string memory _symbol
     )
-        ERC20(_name, _symbol)  // Initialize the ERC20 token with name and symbol.
+        ERC20(_name, _symbol) // Initialize the ERC20 token with name and symbol.
         Ownable(msg.sender)
-    {
-    }
+    {}
 
     /// @notice Allows owner to set DPpool address
     /// @dev sets _depegPool contract address to ERC20, only owner can call this contract
@@ -47,7 +44,7 @@ contract DPwtETH is ERC20, IYBwtETH, Ownable {
      * @param _value Amount of tokens to mint.
      */
     function mint(address _account, uint256 _value) external onlyDepegPool {
-        _mint(_account, _value);  // Call ERC20's internal _mint function.
+        _mint(_account, _value); // Call ERC20's internal _mint function.
     }
 
     /**
@@ -57,7 +54,7 @@ contract DPwtETH is ERC20, IYBwtETH, Ownable {
      * @param _value Amount of tokens to burn.
      */
     function burn(address _account, uint256 _value) external onlyDepegPool {
-        _burn(_account, _value);  // Call ERC20's internal _burn function.
+        _burn(_account, _value); // Call ERC20's internal _burn function.
     }
 
     /*
@@ -69,8 +66,10 @@ contract DPwtETH is ERC20, IYBwtETH, Ownable {
      * @dev Ensures that only the DepegPool contract can mint or burn tokens.
      */
     modifier onlyDepegPool() {
-        require(msg.sender == address(depegPool), "DPwtETH: Only depeg pool contract function");
+        require(
+            msg.sender == address(depegPool),
+            "DPwtETH: Only depeg pool contract function"
+        );
         _;
     }
-
 }

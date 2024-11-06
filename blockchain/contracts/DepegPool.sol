@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -11,7 +11,6 @@ import "./interfaces/IDPwtETH.sol";
 import "./interfaces/IYBwtETH.sol";
 
 contract DepegPool {
-
     // Name of the pool.
     string public name;
 
@@ -63,8 +62,7 @@ contract DepegPool {
         address _YB_wtETH,
         uint256 _poolActiveDuration,
         string memory _name
-    )
-    {
+    ) {
         liquidityPool = ILiquidityPool(_tPool);
         wtETH = IWtETH(_wtETH);
         DP_wtETH = IDPwtETH(_DP_wtETH);
@@ -83,7 +81,6 @@ contract DepegPool {
     function splitToken(uint256 _amount) external {
         require(_amount > 0, "DepegPool: no zero amount");
         require(checkPoolIsActive(), "DepegPool: pool isn't active");
-
 
         wtETH.transferFrom(msg.sender, address(this), _amount);
         DP_wtETH.mint(msg.sender, _amount / 2);
@@ -129,7 +126,10 @@ contract DepegPool {
         require(!DepegResolved, "DepegPool: the depeg is already resolved");
 
         if (startSharePrice > currentSharePrice()) {
-            depegSize = 10 ** depegDecimal - (currentSharePrice() * 10 ** depegDecimal) / startSharePrice;
+            depegSize =
+                10 ** depegDecimal -
+                (currentSharePrice() * 10 ** depegDecimal) /
+                startSharePrice;
             poolIsDepegged = true;
         }
         DepegResolved = true;
@@ -153,8 +153,12 @@ contract DepegPool {
         // If depeg occurred, adjust redemption amounts based on depeg size.
         else {
             _amountWtETHtoSend =
-                _amountDP + (_amountDP * depegSize) / 10**depegDecimal +
-                _amountYB - (_amountYB * depegSize) / 10**depegDecimal;
+                _amountDP +
+                (_amountDP * depegSize) /
+                10 ** depegDecimal +
+                _amountYB -
+                (_amountYB * depegSize) /
+                10 ** depegDecimal;
         }
 
         YB_wtETH.burn(msg.sender, _amountYB);
