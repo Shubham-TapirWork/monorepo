@@ -1,27 +1,26 @@
 import React from 'react';
 import Navbar from './component/Navbar';
-import Tabs from './component/Tabs';
-import Content from './component/Content';
 import Footer from './component/Footer';
+import Firstpage from './component/1stpage';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Content from './component/Content';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (
-    <div className="App">
-      <div>
+    <Router>
+      <div className="App">
         <Navbar />
-      </div>
-      <div>
-        <Tabs />
-      </div>
-      <div>
-        <Content />
-      </div>
-      <div>
+        <Routes>
+          {/* Main page route */}
+          <Route path="/" element={<Firstpage />} />
+
+          {/* Content page route */}
+          <Route path="/content" element={<Content />} />
+        </Routes>
         <Footer />
       </div>
-    </div>
-
+    </Router>
   );
 }
 

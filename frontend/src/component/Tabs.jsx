@@ -14,7 +14,7 @@ function JustifiedExample() {
     ];
 
     return (
-        <div className='d-flex mt-4' style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}> 
+        <div className='d-flex flex-column align-items-center justify-content-center mt-4'> 
             <ButtonGroup className='my-3 ms-5'> 
                 {radios.map((radio, idx) => ( 
                     <ToggleButton 
@@ -32,11 +32,11 @@ function JustifiedExample() {
                     </ToggleButton> 
                 ))} 
             </ButtonGroup> 
-            <div className='mt-3  me-5'> 
+             {/* <div className='mt-3  me-5'> 
                 <Button variant="outline-primary" className="ps-5 pe-5 me-2 ms-5 rounded-pill">Restake Safe</Button> 
                 <Button variant="outline-primary" className="ps-5 pe-5 me-2 rounded-pill">Restake with boost</Button> 
                 <Button variant="outline-primary" className="ps-5 pe-5 rounded-pill">Restake only</Button> 
-            </div> 
+            </div>*/}
         </div>
     );
 }
