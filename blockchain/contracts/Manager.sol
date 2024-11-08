@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -7,9 +7,7 @@ import {DPwtETH} from "./DPwtETH.sol";
 import {DepegPool} from "./DepegPool.sol";
 import {StableSwap} from "./StableSwap.sol";
 
-
 contract Manager is Ownable {
-
     struct Depeg {
         address yb_wtETH;
         address dp_wtETH;
@@ -19,10 +17,7 @@ contract Manager is Ownable {
 
     Depeg[] public depegModule;
 
-    constructor(
-    )
-    Ownable(msg.sender)
-    {}
+    constructor() Ownable(msg.sender) {}
 
     function deployDepeg(
         address _tPool,
@@ -51,12 +46,7 @@ contract Manager is Ownable {
         StableSwap swap = new StableSwap([address(yb), address(dp)]);
 
         depegModule.push(
-                Depeg(address(yb),
-                address(dp),
-                address(depegPool),
-                address(swap)
-            )
+            Depeg(address(yb), address(dp), address(depegPool), address(swap))
         );
     }
-
 }

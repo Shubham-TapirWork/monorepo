@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -42,8 +42,7 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     event Withdraw(address indexed sender, address receipent, uint256 amount);
 
     /// @notice Constructor to initialize the contract
-    constructor(address _managerAddress)
-    Ownable(msg.sender) {
+    constructor(address _managerAddress) Ownable(msg.sender) {
         managerAddress = _managerAddress;
     }
 
@@ -59,32 +58,37 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     /// @dev The deposit amount must be valid (non-zero and fitting within uint128). Shares are calculated based on the pool's total value.
     /// @return The number of tETH shares minted for the deposit
     function deposit() external payable returns (uint256) {
-        uint256 _amount = msg.value;  // The amount of Ether deposited by the user
-        totalValueInLp += uint128(_amount);  // Update the total value in the pool
+        uint256 _amount = msg.value; // The amount of Ether deposited by the user
+        totalValueInLp += uint128(_amount); // Update the total value in the pool
 
         // Calculate the number of tETH shares for the deposit amount
         uint256 share = _sharesForDepositAmount(_amount);
 
         // Revert if the amount is invalid (zero, exceeds uint128, or no shares can be issued)
-        if (_amount > type(uint128).max || _amount == 0 || share == 0) revert InvalidAmount();
+        if (_amount > type(uint128).max || _amount == 0 || share == 0)
+            revert InvalidAmount();
 
         // Mint tETH shares to the user
         tETH.mintShares(msg.sender, share);
 
         emit Deposit(msg.sender, _amount);
-        return share;  // Return the number of shares minted
+        return share; // Return the number of shares minted
     }
-
 
     /// @notice withdraw from pool
     /// @dev Burns user share from msg.senders account & Sends equivalent amount of ETH back to the recipient
     /// @param _recipient the recipient who will receives the ETH
     /// @param _amount the amount to withdraw from contract
     /// it returns the amount of shares burned
-    function withdraw(address _recipient, uint256 _amount) external returns (uint256) {
+    function withdraw(
+        address _recipient,
+        uint256 _amount
+    ) external returns (uint256) {
         uint256 share = sharesForWithdrawalAmount(_amount);
-        if (totalValueInLp < _amount || tETH.balanceOf(msg.sender) < _amount) revert InsufficientLiquidity();
-        if (_amount > type(uint128).max || _amount == 0 || share == 0) revert InvalidAmount();
+        if (totalValueInLp < _amount || tETH.balanceOf(msg.sender) < _amount)
+            revert InsufficientLiquidity();
+        if (_amount > type(uint128).max || _amount == 0 || share == 0)
+            revert InvalidAmount();
 
         totalValueInLp -= uint128(_amount);
         tETH.burnShares(msg.sender, share);
@@ -95,11 +99,12 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
         return share;
     }
 
-
     /// @notice Internal function to calculate how many tETH shares should be minted for a given deposit amount
     /// @param _depositAmount The amount of Ether being deposited
     /// @return The number of tETH shares to be minted
-    function _sharesForDepositAmount(uint256 _depositAmount) internal view returns (uint256) {
+    function _sharesForDepositAmount(
+        uint256 _depositAmount
+    ) internal view returns (uint256) {
         // Calculate the total pooled Ether, excluding the current deposit
         uint256 totalPooledEther = getTotalPooledEther() - _depositAmount;
 
@@ -122,7 +127,7 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     /// @notice Calculates how many tETH shares are equivalent to a given amount of Ether
     /// @param _amount The amount of Ether for which to calculate shares
     /// @return The corresponding number of tETH shares
-    function sharesForAmount(uint256 _amount) public view returns(uint256) {
+    function sharesForAmount(uint256 _amount) public view returns (uint256) {
         uint256 totalPooledEther = getTotalPooledEther();
 
         // If no Ether is in the pool, no shares can be calculated
@@ -137,24 +142,28 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     /// @notice Returns the total amount of Ether that a user can claim based on their tETH shares
     /// @param _user The address of the user
     /// @return The total claimable Ether (in Wei)
-    function getTotalEtherClaimOf(address _user) external view returns (uint256) {
-        uint256 staked;  // The amount of Ether the user has staked
-        uint256 totalShares = tETH.totalShares();  // Total tETH shares in circulation
+    function getTotalEtherClaimOf(
+        address _user
+    ) external view returns (uint256) {
+        uint256 staked; // The amount of Ether the user has staked
+        uint256 totalShares = tETH.totalShares(); // Total tETH shares in circulation
 
         // If there are shares, calculate the user's claimable Ether based on their shares
         if (totalShares > 0) {
             staked = (getTotalPooledEther() * tETH.shares(_user)) / totalShares;
         }
 
-        return staked;  // Return the claimable Ether
+        return staked; // Return the claimable Ether
     }
 
     /**
      * @notice Calculates the amount of shares required to withdraw a specified amount of ether.
      * @param _amount The amount of ether to be withdrawn.
      * @return The number of shares corresponding to the given ether amount.
-    */
-    function sharesForWithdrawalAmount(uint256 _amount) public view returns (uint256) {
+     */
+    function sharesForWithdrawalAmount(
+        uint256 _amount
+    ) public view returns (uint256) {
         uint256 totalPooledEther = getTotalPooledEther(); // Get the total ether in the pool
         if (totalPooledEther == 0) {
             return 0; // If no ether is pooled, return 0 shares
@@ -164,12 +173,11 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
         return (numerator + totalPooledEther - 1) / totalPooledEther;
     }
 
-
     /// @notice Converts a given number of tETH shares back into an Ether amount
     /// @param _share The number of tETH shares to convert
     /// @return The corresponding Ether amount (in Wei)
     function amountForShare(uint256 _share) public view returns (uint256) {
-        uint256 totalShares = tETH.totalShares();  // Total tETH shares in circulation
+        uint256 totalShares = tETH.totalShares(); // Total tETH shares in circulation
 
         // If there are no shares, return 0
         if (totalShares == 0) {
@@ -178,14 +186,15 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
         // Calculate the Ether amount based on the proportion of shares to total pooled Ether
         return (_share * getTotalPooledEther()) / totalShares;
-
     }
 
     /// @notice adding rewards to our contract to calculate price correctly
     /// @param _accruedRewards The validators rewards
     function rebase(int256 _accruedRewards) public {
         if (msg.sender != address(managerAddress)) revert IncorrectCaller();
-        totalValueOutOfLp = uint256(int256(totalValueOutOfLp) + _accruedRewards);
+        totalValueOutOfLp = uint256(
+            int256(totalValueOutOfLp) + _accruedRewards
+        );
 
         emit Rebase(getTotalPooledEther(), tETH.totalShares());
     }
@@ -198,5 +207,4 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
         (bool sent, ) = _recipient.call{value: _amount}("");
         require(sent && address(this).balance == balance - _amount, "SendFail");
     }
-
 }
