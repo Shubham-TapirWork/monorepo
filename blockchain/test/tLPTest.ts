@@ -305,7 +305,7 @@ describe("TLP", function () {
         const firstAccount = accounts[1]
         const secondAccount = accounts[2]
 
-        await lp.connect(firstAccount).depositDepegProtection(
+        await lp.connect(firstAccount).getDPwtETHForETH(
           depegPool.target,
           amm.target,
           yb.target,
@@ -313,7 +313,7 @@ describe("TLP", function () {
           {value: ethers.parseEther("1")}
           )
 
-        await lp.connect(secondAccount).depositDepegProtection(
+        await lp.connect(secondAccount).getDPwtETHForETH(
           depegPool.target,
           amm.target,
           yb.target,

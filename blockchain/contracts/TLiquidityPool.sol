@@ -84,7 +84,29 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
         return share; // Return the number of shares minted
     }
 
-    function depositDepegProtection(
+    /// @notice Allows users to deposit without ETH
+    /// @dev The deposit amount must be valid (non-zero and fitting within uint128). Shares are calculated based on the pool's total value.
+    /// @param _amount amount of ETH
+    /// @return The number of tETH shares minted for the deposit
+    function depositWithoutETH(uint256 _amount) external payable returns (uint256) {
+        totalValueInLp += uint128(_amount); // Update the total value in the pool
+
+        // Calculate the number of tETH shares for the deposit amount
+        uint256 share = _sharesForDepositAmount(_amount);
+
+        // Revert if the amount is invalid (zero, exceeds uint128, or no shares can be issued)
+        if (_amount > type(uint128).max || _amount == 0 || share == 0)
+            revert InvalidAmount();
+
+        // Mint tETH shares to the user
+        tETH.mintShares(msg.sender, share);
+
+        emit Deposit(msg.sender, _amount);
+        return share; // Return the number of shares minted
+    }
+
+
+    function getDPwtETHForETH(
         address _depegPoolAddress,
         address _stableSwap,
         address _ybAddress,
