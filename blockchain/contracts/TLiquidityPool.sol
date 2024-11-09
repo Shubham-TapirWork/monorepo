@@ -143,7 +143,7 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
     }
 
-    function depositYieldBoosting(
+    function getYBwtETHForETH(
         address _depegPoolAddress,
         address _stableSwap,
         address _ybAddress,

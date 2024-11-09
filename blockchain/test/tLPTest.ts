@@ -336,7 +336,7 @@ describe("TLP", function () {
         const firstAccount = accounts[1]
         const secondAccount = accounts[2]
 
-        await lp.connect(firstAccount).depositYieldBoosting(
+        await lp.connect(firstAccount).getYBwtETHForETH(
             depegPool.target,
             amm.target,
             yb.target,
@@ -344,7 +344,7 @@ describe("TLP", function () {
             {value: ethers.parseEther("1")}
           )
 
-        await lp.connect(secondAccount).depositYieldBoosting(
+        await lp.connect(secondAccount).getYBwtETHForETH(
           depegPool.target,
           amm.target,
           yb.target,
