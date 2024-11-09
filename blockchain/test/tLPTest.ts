@@ -290,18 +290,20 @@ describe("TLP", function () {
         const secondAccount = accounts[2]
 
         await lp.connect(firstAccount).depositDepegProtection(
+          ethers.parseEther("1"),
           depegPool.target,
           amm.target,
           yb.target,
           dp.target,
-          {value: ethers.parseEther("1")})
+          )
 
         await lp.connect(secondAccount).depositDepegProtection(
+          ethers.parseEther("1"),
           depegPool.target,
           amm.target,
           yb.target,
-          dp.target,
-          {value: ethers.parseEther("1")})
+          dp.target
+        )
 
         expect(await dp.balanceOf(firstAccount.address))
             .to.be.greaterThan(ethers.parseEther("0.99"));
