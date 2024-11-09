@@ -2,7 +2,7 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const TLiquidityPool = buildModule("TLiquidityPool",  (m) => {
 
-    const TLiquidityPool = m.contract("TLiquidityPool", ["0xB1A64b424ac21f1c96ff121b75A63fdfD4b3DfC2"]);
+    const TLiquidityPool = m.contract("TLiquidityPool", ["0xBf3F50076B12bFd3E379a18569861a8102eB8621"]);
     return { TLiquidityPool };
 });
 
