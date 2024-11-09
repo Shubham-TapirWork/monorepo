@@ -282,7 +282,7 @@ describe("TLP", function () {
         await amm.addLiquidity([ybBalance, dpBalance], 0);
       }
 
-      it("Deposit 3ETH and want to split it in YB/DP", async function() {
+      it("Deposit 1ETH and want to take only DP tokens", async function() {
         const {wTETH, tETH, accounts, lp, depegPool, yb, dp, amm} = await loadFixture(deployOneYearLockFixture);
         await amm_fund(wTETH, tETH, accounts, lp, depegPool, yb, dp, amm);
 
@@ -310,6 +310,43 @@ describe("TLP", function () {
 
         expect(await dp.balanceOf(secondAccount.address))
             .to.be.greaterThan(ethers.parseEther("0.99"));
+
+    });
+
+      it("Deposit 1ETH and want to take only YB tokens", async function() {
+        const {wTETH, tETH, accounts, lp, depegPool, yb, dp, amm} = await loadFixture(deployOneYearLockFixture);
+        await amm_fund(wTETH, tETH, accounts, lp, depegPool, yb, dp, amm);
+
+        const firstAccount = accounts[1]
+        const secondAccount = accounts[2]
+
+        await lp.connect(firstAccount).depositYieldBoosting(
+          ethers.parseEther("1"),
+          depegPool.target,
+          amm.target,
+          yb.target,
+          dp.target,
+          )
+
+        await lp.connect(secondAccount).depositYieldBoosting(
+          ethers.parseEther("1"),
+          depegPool.target,
+          amm.target,
+          yb.target,
+          dp.target
+        )
+
+        expect(await yb.balanceOf(firstAccount.address))
+            .to.be.greaterThan(ethers.parseEther("0.99"));
+
+        expect(await yb.balanceOf(secondAccount.address))
+            .to.be.greaterThan(ethers.parseEther("0.99"));
+
+        expect(await dp.balanceOf(secondAccount.address))
+            .to.be.equal(0);
+
+        expect(await dp.balanceOf(secondAccount.address))
+            .to.be.equal(0);
 
     });
 

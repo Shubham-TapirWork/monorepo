@@ -122,6 +122,44 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
     }
 
+    function depositYieldBoosting(
+        uint256 _amount,
+        address _depegPoolAddress,
+        address _stableSwap,
+        address _ybAddress,
+        address _dpAddress
+    ) external payable {
+//        uint256 _amount = msg.value; // The amount of Ether deposited by the user
+        totalValueInLp += uint128(_amount); // Update the total value in the pool
+
+        // Calculate the number of tETH shares for the deposit amount
+        uint256 share = _sharesForDepositAmount(_amount);
+
+        // Revert if the amount is invalid (zero, exceeds uint128, or no shares can be issued)
+        if (_amount > type(uint128).max || _amount == 0 || share == 0)
+            revert InvalidAmount();
+
+        // Mint tETH shares to the liquidity contract, and wrap it
+        tETH.mintShares(address(this), share);
+        tETH.approve(address(wtETH), amountForShare(share));
+        wtETH.wrap(amountForShare(share));
+
+        // split wrap ETH which should be equal to _shares
+        IDepegPool depegPool = IDepegPool(_depegPoolAddress);
+        wtETH.approve(_depegPoolAddress, share);
+        depegPool.splitToken(share);
+
+        // swap all dp into yb
+        IERC20(_dpAddress).approve(_stableSwap, share / 2);
+        IStableSwap amm = IStableSwap(_stableSwap);
+        amm.swap(1, 0, share / 2, 0);
+
+        // finally send all yb to user
+        IERC20 yb = IERC20(_ybAddress);
+        yb.transfer(msg.sender, yb.balanceOf(address(this)));
+
+    }
+
     /// @notice withdraw from pool
     /// @dev Burns user share from msg.senders account & Sends equivalent amount of ETH back to the recipient
     /// @param _recipient the recipient who will receives the ETH
