@@ -1,10 +1,15 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Id|entifier: BUSL-1.1
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./interfaces/ItETH.sol";
 import "./interfaces/ILiquidityPool.sol";
+import "./interfaces/IWtETH.sol";
+
+import "hardhat/console.sol";
+import {IDepegPool} from "./interfaces/IDepegPool.sol";
+import {IStableSwap} from "./interfaces/IStableSwap.sol";
 
 /// @title TLiquidityPool Contract
 /// @notice This contract manages a liquidity pool where users can deposit Ether and receive tETH shares.
@@ -12,6 +17,9 @@ import "./interfaces/ILiquidityPool.sol";
 contract TLiquidityPool is Ownable, ILiquidityPool {
     /// @notice Reference to the ItETH contract that manages tETH shares
     ItETH public tETH;
+
+    /// @notice Reference to the IWtETH contract that manages tETH shares
+    IWtETH public wtETH;
 
     /// @notice the address which will call rebase function and update the contract balance by adding rewards
     address public managerAddress;
@@ -49,9 +57,10 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     /// @notice Allows owner to set tETH address
     /// @dev sets tETH contract address to LP, only owner can call this contract, also tETH should be zero address
     /// @param _contractTETH tETH address
-    function setContractTETH(address _contractTETH) external onlyOwner {
+    function setContract(address _contractTETH, address _contractWtETH) external onlyOwner {
         if (address(tETH) != address(0)) revert TETHAlreadySet();
         tETH = ItETH(_contractTETH);
+        wtETH = IWtETH(_contractWtETH);
     }
 
     /// @notice Allows users to deposit Ether into the liquidity pool and mint tETH shares in return
@@ -73,6 +82,43 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
         emit Deposit(msg.sender, _amount);
         return share; // Return the number of shares minted
+    }
+
+    function depositDepegProtection(
+        address _depegPoolAddress,
+        address _stableSwap,
+        address _ybAddress,
+        address _dpAddress
+    ) external payable {
+        uint256 _amount = msg.value; // The amount of Ether deposited by the user
+        totalValueInLp += uint128(_amount); // Update the total value in the pool
+
+        // Calculate the number of tETH shares for the deposit amount
+        uint256 share = _sharesForDepositAmount(_amount);
+
+        // Revert if the amount is invalid (zero, exceeds uint128, or no shares can be issued)
+        if (_amount > type(uint128).max || _amount == 0 || share == 0)
+            revert InvalidAmount();
+
+        // Mint tETH shares to the liquidity contract, and wrap it
+        tETH.mintShares(address(this), share);
+        tETH.approve(address(wtETH), amountForShare(share));
+        wtETH.wrap(amountForShare(share));
+
+        // split wrap ETH which should be equal to _shares
+        IDepegPool depegPool = IDepegPool(_depegPoolAddress);
+        wtETH.approve(_depegPoolAddress, share);
+        depegPool.splitToken(share);
+
+        // swap all YB into DP
+        IERC20(_ybAddress).approve(_stableSwap, share / 2);
+        IStableSwap amm = IStableSwap(_stableSwap);
+        amm.swap(0, 1, share / 2, 0);
+
+        // finally send all dp to user
+        IERC20 dp = IERC20(_dpAddress);
+        dp.transfer(msg.sender, dp.balanceOf(address(this)));
+
     }
 
     /// @notice withdraw from pool

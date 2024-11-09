@@ -8,6 +8,7 @@ import {HardhatEthersSigner} from "@nomicfoundation/hardhat-ethers/signers";
 const { ethers } = require("hardhat"); // assuming commonjs
 
 describe("TLP", function () {
+
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
@@ -27,9 +28,34 @@ describe("TLP", function () {
     const WTETH = await hre.ethers.getContractFactory("WtETH");
     const wTETH = await WTETH.deploy(lp.target, tETH.target)
 
-    await lp.setContractTETH(tETH.target);
+    await lp.setContract(tETH.target, wTETH.target);
 
-    return {owner, otherAccount, lp, tETH, accounts, managerAddress, wTETH};
+    const Manager = await hre.ethers.getContractFactory("Manager")
+    const manager = await Manager.deploy()
+
+    const lpTime = 86400;
+    await manager.deployDepeg(
+        lp.target,
+        wTETH.target,
+        "test YB",
+        "test YB",
+        "test dp",
+        "test dp",
+        "test pool",
+        lpTime
+    )
+    const module = await manager.depegModule(0)
+    const DepegPool = await hre.ethers.getContractFactory("DepegPool")
+    const depegPool = DepegPool.attach(module.depegPool)
+    const YB = await hre.ethers.getContractFactory("YBwtETH")
+    const yb = YB.attach(module.yb_wtETH)
+    const DP = await hre.ethers.getContractFactory("DPwtETH")
+    const dp = DP.attach(module.dp_wtETH)
+
+    const AMM = await hre.ethers.getContractFactory("StableSwap");
+    const amm = AMM.attach(module.swap);
+
+    return {owner, otherAccount, lp, tETH, accounts, managerAddress, wTETH, manager, depegPool, yb, dp, amm};
   }
 
 
@@ -43,7 +69,7 @@ describe("TLP", function () {
     it("Should fail if i try to set another tETH",async function() {
       const {owner, lp, tETH} = await loadFixture(deployOneYearLockFixture);
 
-      await expect(lp.setContractTETH(owner.address)).to.be.revertedWithCustomError(lp, "TETHAlreadySet")
+      await expect(lp.setContract(owner.address, owner.address)).to.be.revertedWithCustomError(lp, "TETHAlreadySet")
     });
   });
 
@@ -87,11 +113,10 @@ describe("TLP", function () {
     });
 
     it("Should be 1/2 their shares, when two person mints same amount, negative rebase happened", async function() {
-      const {managerAddress, accounts, otherAccount, lp, tETH} = await loadFixture(deployOneYearLockFixture);
+      const {managerAddress, accounts, lp, tETH} = await loadFixture(deployOneYearLockFixture);
 
       const firstAccount = accounts[1]
       const secondAccount = accounts[2]
-      const thirdAccount = accounts[3]
 
       await lp.connect(firstAccount).deposit({value: ethers.parseEther("1")})
       await lp.connect(secondAccount).deposit({value: ethers.parseEther("1")})
@@ -197,7 +222,7 @@ describe("TLP", function () {
         expect(await tETH.shares(secondAccount.address))
           .to.be.equal(ethers.parseEther("3"))
 
-        // wrapping should give 50% of wtETH 
+        // wrapping should give 50% of wtETH
         await wTETH.connect(firstAccount).wrap(ethers.parseEther("3"))
         await wTETH.connect(secondAccount).wrap(ethers.parseEther("3"))
 
@@ -233,6 +258,57 @@ describe("TLP", function () {
             .to.be.equal(ethers.parseEther("4"))
         expect(await tETH.balanceOf(secondAccount.address))
             .to.be.equal(ethers.parseEther("4"))
+    });
+
+  });
+
+  describe("Deposit DP/YB", function() {
+
+      async function amm_fund(wTETH, tETH, accounts, lp, depegPool, yb, dp, amm) {
+        const owner = accounts[0];
+        await lp.deposit({value: ethers.parseEther("100")})
+        await tETH.approve(wTETH.target, ethers.parseEther("100"))
+        await wTETH.wrap(ethers.parseEther("100"))
+
+        const totalBalance = await wTETH.balanceOf(owner.address)
+
+        await wTETH.approve(depegPool.target, totalBalance);
+        await depegPool.splitToken(totalBalance);
+
+        const ybBalance = await yb.balanceOf(owner.address)
+        const dpBalance = await dp.balanceOf(owner.address)
+        await yb.approve(amm.target, ybBalance);
+        await dp.approve(amm.target, dpBalance);
+        await amm.addLiquidity([ybBalance, dpBalance], 0);
+      }
+
+      it("Deposit 3ETH and want to split it in YB/DP", async function() {
+        const {wTETH, tETH, accounts, lp, depegPool, yb, dp, amm} = await loadFixture(deployOneYearLockFixture);
+        await amm_fund(wTETH, tETH, accounts, lp, depegPool, yb, dp, amm);
+
+        const firstAccount = accounts[1]
+        const secondAccount = accounts[2]
+
+        await lp.connect(firstAccount).depositDepegProtection(
+          depegPool.target,
+          amm.target,
+          yb.target,
+          dp.target,
+          {value: ethers.parseEther("1")})
+
+        await lp.connect(secondAccount).depositDepegProtection(
+          depegPool.target,
+          amm.target,
+          yb.target,
+          dp.target,
+          {value: ethers.parseEther("1")})
+
+        expect(await dp.balanceOf(firstAccount.address))
+            .to.be.greaterThan(ethers.parseEther("0.99"));
+
+        expect(await dp.balanceOf(secondAccount.address))
+            .to.be.greaterThan(ethers.parseEther("0.99"));
+
     });
 
   });
