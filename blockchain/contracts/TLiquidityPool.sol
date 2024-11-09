@@ -85,13 +85,12 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     }
 
     function depositDepegProtection(
-        uint256 _amount,
         address _depegPoolAddress,
         address _stableSwap,
         address _ybAddress,
         address _dpAddress
     ) external payable {
-//        uint256 _amount = msg.value; // The amount of Ether deposited by the user
+        uint256 _amount = msg.value; // The amount of Ether deposited by the user
         totalValueInLp += uint128(_amount); // Update the total value in the pool
 
         // Calculate the number of tETH shares for the deposit amount
@@ -123,13 +122,12 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     }
 
     function depositYieldBoosting(
-        uint256 _amount,
         address _depegPoolAddress,
         address _stableSwap,
         address _ybAddress,
         address _dpAddress
     ) external payable {
-//        uint256 _amount = msg.value; // The amount of Ether deposited by the user
+        uint256 _amount = msg.value; // The amount of Ether deposited by the user
         totalValueInLp += uint128(_amount); // Update the total value in the pool
 
         // Calculate the number of tETH shares for the deposit amount

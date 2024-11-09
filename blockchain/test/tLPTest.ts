@@ -290,19 +290,19 @@ describe("TLP", function () {
         const secondAccount = accounts[2]
 
         await lp.connect(firstAccount).depositDepegProtection(
-          ethers.parseEther("1"),
           depegPool.target,
           amm.target,
           yb.target,
           dp.target,
+          {value: ethers.parseEther("1")}
           )
 
         await lp.connect(secondAccount).depositDepegProtection(
-          ethers.parseEther("1"),
           depegPool.target,
           amm.target,
           yb.target,
-          dp.target
+          dp.target,
+          {value: ethers.parseEther("1")}
         )
 
         expect(await dp.balanceOf(firstAccount.address))
@@ -321,19 +321,19 @@ describe("TLP", function () {
         const secondAccount = accounts[2]
 
         await lp.connect(firstAccount).depositYieldBoosting(
-          ethers.parseEther("1"),
+            depegPool.target,
+            amm.target,
+            yb.target,
+            dp.target,
+            {value: ethers.parseEther("1")}
+          )
+
+        await lp.connect(secondAccount).depositYieldBoosting(
           depegPool.target,
           amm.target,
           yb.target,
           dp.target,
-          )
-
-        await lp.connect(secondAccount).depositYieldBoosting(
-          ethers.parseEther("1"),
-          depegPool.target,
-          amm.target,
-          yb.target,
-          dp.target
+          {value: ethers.parseEther("1")}
         )
 
         expect(await yb.balanceOf(firstAccount.address))
