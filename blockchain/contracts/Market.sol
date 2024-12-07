@@ -11,11 +11,8 @@ contract LiquidityPool {
     uint256 public initAnchor;
     uint256 public lnFeeRateRoot;
 
-    uint256 public liquidityA;
-    uint256 public liquidityB;
-
-    mapping(address => uint256) public userLiquidityA;
-    mapping(address => uint256) public userLiquidityB;
+    mapping(address => uint256) public liquidity;
+    mapping(address => mapping(address => uint256)) public userLiquidity;
 
     event Swap(address indexed user, address tokenIn, uint256 inputAmount, uint256 outputAmount, uint256 fee);
     event AddLiquidity(address indexed user, address token, uint256 amount);
@@ -35,35 +32,45 @@ contract LiquidityPool {
         lnFeeRateRoot = _lnFeeRateRoot;
     }
 
-    function swap(address tokenIn, uint256 amountIn) external returns (uint256) {
-        require(tokenIn == tokenA || tokenIn == tokenB, "Invalid token");
+    function swap(
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn
+    ) external returns (uint256) {
+        require(liquidity[tokenIn] > 0 && liquidity[tokenOut] > 0, "Insufficient liquidity");
 
-        address tokenOut = (tokenIn == tokenA) ? tokenB : tokenA;
-        uint256 liquidityIn = (tokenIn == tokenA) ? liquidityA : liquidityB;
-        uint256 liquidityOut = (tokenOut == tokenA) ? liquidityA : liquidityB;
+        // Get current liquidity
+        uint256 totalAssetIn = liquidity[tokenIn];
+        uint256 totalAssetOut = liquidity[tokenOut];
 
-        require(liquidityIn > 0 && liquidityOut > 0, "Insufficient liquidity");
+        // Calculate fee using logarithmic function
+        uint256 fee = (lnFeeRateRoot * log2(amountIn + initAnchor)) / 1e18;
+        uint256 netAmountIn = amountIn - fee;
 
-        // Calculate fee and amount out
-        uint256 fee = calculateFee(amountIn);
-        uint256 amountOut = (amountIn - fee) * scalarRoot / 1e18;
-        require(liquidityOut >= amountOut, "Insufficient output liquidity");
+        // Calculate constant product invariant
+        uint256 k = totalAssetIn * totalAssetOut;
+
+        // Calculate output using ratio and constant product
+        uint256 newTotalAssetIn = totalAssetIn + netAmountIn;
+        uint256 newTotalAssetOut = k / newTotalAssetIn;
+
+        // Amount of tokenOut to send
+        uint256 amountOut = totalAssetOut - newTotalAssetOut;
+
+        // Scale the output with scalarRoot
+        uint256 finalAmountOut = (amountOut * scalarRoot) / 1e18;
 
         // Update liquidity
-        if (tokenIn == tokenA) {
-            liquidityA += amountIn;
-            liquidityB -= amountOut;
-        } else {
-            liquidityB += amountIn;
-            liquidityA -= amountOut;
-        }
+        liquidity[tokenIn] += amountIn; // Gross input added to the pool
+        liquidity[tokenOut] -= finalAmountOut;
 
         // Transfer tokens
         require(IERC20(tokenIn).transferFrom(msg.sender, address(this), amountIn), "Token transfer failed");
-        require(IERC20(tokenOut).transfer(msg.sender, amountOut), "Token transfer failed");
+        require(IERC20(tokenOut).transfer(msg.sender, finalAmountOut), "Token transfer failed");
 
-        emit Swap(msg.sender, tokenIn, amountIn, amountOut, fee);
-        return amountOut;
+        emit Swap(msg.sender, tokenIn, amountIn, finalAmountOut, fee);
+
+        return finalAmountOut;
     }
 
     function calculateFee(uint256 amount) public view returns (uint256) {
@@ -83,13 +90,8 @@ contract LiquidityPool {
         require(token == tokenA || token == tokenB, "Invalid token");
         require(amount > 0, "Amount must be greater than zero");
 
-        if (token == tokenA) {
-            liquidityA += amount;
-            userLiquidityA[msg.sender] += amount;
-        } else {
-            liquidityB += amount;
-            userLiquidityB[msg.sender] += amount;
-        }
+        liquidity[token] += amount;
+        userLiquidity[msg.sender][token] += amount;
 
         require(IERC20(token).transferFrom(msg.sender, address(this), amount), "Token transfer failed");
         emit AddLiquidity(msg.sender, token, amount);
@@ -98,18 +100,11 @@ contract LiquidityPool {
     function removeLiquidity(address token, uint256 amount) external {
         require(token == tokenA || token == tokenB, "Invalid token");
         require(amount > 0, "Amount must be greater than zero");
+        require(liquidity[token] >= amount, "Insufficient liquidity");
+        require(userLiquidity[msg.sender][token] >= amount, "Insufficient user liquidity");
 
-        if (token == tokenA) {
-            require(liquidityA >= amount, "Insufficient liquidityA");
-            require(userLiquidityA[msg.sender] >= amount, "Insufficient user liquidityA");
-            liquidityA -= amount;
-            userLiquidityA[msg.sender] -= amount;
-        } else {
-            require(liquidityB >= amount, "Insufficient liquidityB");
-            require(userLiquidityB[msg.sender] >= amount, "Insufficient user liquidityB");
-            liquidityB -= amount;
-            userLiquidityB[msg.sender] -= amount;
-        }
+        liquidity[token] -= amount;
+        userLiquidity[msg.sender][token] -= amount;
 
         require(IERC20(token).transfer(msg.sender, amount), "Token transfer failed");
         emit RemoveLiquidity(msg.sender, token, amount);
