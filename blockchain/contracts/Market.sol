@@ -86,15 +86,33 @@ contract LiquidityPool {
         return result;
     }
 
-    function addLiquidity(address token, uint256 amount) external {
-        require(token == tokenA || token == tokenB, "Invalid token");
-        require(amount > 0, "Amount must be greater than zero");
+    function addLiquidity(uint256 amountA, uint256 amountB) external {
+        require(amountA > 0 && amountB > 0, "Amounts must be greater than zero");
 
-        liquidity[token] += amount;
-        userLiquidity[msg.sender][token] += amount;
+        if (liquidity[tokenA] > 0 && liquidity[tokenB] > 0) {
+            // Calculate the required amount of tokenB based on the ratio in the pool
+            uint256 requiredAmountB = (amountA * liquidity[tokenB]) / liquidity[tokenA];
 
-        require(IERC20(token).transferFrom(msg.sender, address(this), amount), "Token transfer failed");
-        emit AddLiquidity(msg.sender, token, amount);
+            // Ensure the provided amountB matches the required proportion
+            require(amountB >= requiredAmountB, "Token amounts must be in the correct proportion");
+
+            // Adjust amountB to the required proportion if there's excess
+            amountB = requiredAmountB;
+        }
+
+        // Update liquidity
+        liquidity[tokenA] += amountA;
+        liquidity[tokenB] += amountB;
+
+        userLiquidity[msg.sender][tokenA] += amountA;
+        userLiquidity[msg.sender][tokenB] += amountB;
+
+        // Transfer tokens from user to the contract
+        require(IERC20(tokenA).transferFrom(msg.sender, address(this), amountA), "TokenA transfer failed");
+        require(IERC20(tokenB).transferFrom(msg.sender, address(this), amountB), "TokenB transfer failed");
+
+        emit AddLiquidity(msg.sender, tokenA, amountA);
+        emit AddLiquidity(msg.sender, tokenB, amountB);
     }
 
     function removeLiquidity(address token, uint256 amount) external {
