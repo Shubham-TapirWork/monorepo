@@ -19,32 +19,32 @@ interface MarketState {
 }
 
 // Function to calculate totalAsset
-totalAsset = (nsy: number, syExchangeRate: number): number => {
+const totalAsset = (nsy: number, syExchangeRate: number): number => {
   return nsy * syExchangeRate;
 };
 
 // Function to calculate timeToExpiry
-timeToExpiry = (texpiry: number, t: number): number => {
+const timeToExpiry = (texpiry: number, t: number): number => {
   return texpiry - t;
 };
 
 // Function to calculate yearsToExpiry
-yearsToExpiry = (timeToExpiry: number): number => {
+const yearsToExpiry = (timeToExpiry: number): number => {
   return timeToExpiry / oneYearDuration;
 };
 
 // Function to calculate proportion
-proportion = (npt: number, nsy: number): number => {
+const proportion = (npt: number, nsy: number): number => {
   return npt / (npt + nsy);
 };
 
 // Function to calculate rateScalar
-rateScalar = (scalarRoot: number, yearsToExpiry: number): number => {
+const rateScalar = (scalarRoot: number, yearsToExpiry: number): number => {
   return scalarRoot / yearsToExpiry;
 };
 
 // Function to calculate exchangeRate
-exchangeRate = (
+const exchangeRate = (
   proportion: number,
   rateScalar: number,
   rateAnchor: number
@@ -55,7 +55,7 @@ exchangeRate = (
 };
 
 // Function to calculate rateAnchor from exchangeRate
-rateAnchor = (
+const rateAnchor = (
   exchangeRate: number,
   proportion: number,
   rateScalar: number
@@ -64,7 +64,7 @@ rateAnchor = (
 };
 
 // Function to calculate rateAnchor and exchangeRate using scalarRoot
-rateAnchorWithScalarRoot = (
+const rateAnchorWithScalarRoot = (
   proportion: number,
   scalarRoot: number,
   yearsToExpiry: number

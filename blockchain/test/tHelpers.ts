@@ -1,5 +1,4 @@
-import { exchangeRate, rateAnchor } from "../helpers/calc_market_inputs";
-import { log } from "mathjs";
+const { exchangeRate, rateAnchor, rateAnchorWithScalarRoot } = require("../helpers/calc_market_inputs");
 
 // Test function to check if rateAnchor is the inverse of exchangeRate
 const testInverseFunctions = () => {
