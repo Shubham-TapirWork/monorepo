@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 
 async function main() {
     // Replace with your contract address and the private key
-    const contractAddress = "0xF98F2a42264B6e98C8B9F30079e0b43dc0D3CE74";
+    const contractAddress = "0xCA6cede6771Ca07D8D55C1e6040438a9034E37A8";
     const privateKey = process.env.ACCOUNT_PRIVATE_KEY;
     // Define provider and signer
     const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_URL); // replace with actual network if needed
@@ -16,7 +16,7 @@ async function main() {
     const contract = new ethers.Contract(contractAddress, abi, wallet);
 
     // Set the parameters
-    const amounts = [ethers.parseEther("50"), ethers.parseEther("50")]; // Adjust units as per your token decimals
+    const amounts = [ethers.parseEther("500"), ethers.parseEther("500")]; // Adjust units as per your token decimals
     const minShares = 0; // Integer for minShares
 
     // Call the function
