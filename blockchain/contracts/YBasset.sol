@@ -4,15 +4,15 @@ pragma solidity 0.8.27;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol"; // Standard ERC20 implementation from OpenZeppelin.
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./interfaces/IYBwtETH.sol"; // Interface for the YB_wtETH token.
+import "./interfaces/IYBasset.sol"; // Interface for the YB_asset token.
 import "./interfaces/IDepegPool.sol"; // Interface for interacting with the DepegPool contract.
 
 /**
- * @title YBwtETH
- * @dev ERC20-based token representing the yield-bearing version of wtETH (YB_wtETH).
+ * @title YBasset
+ * @dev ERC20-based token representing the yield-bearing version of asset (YB_asset).
  *      This contract allows only the DepegPool to mint and burn tokens.
  */
-contract YBwtETH is ERC20, IYBwtETH, Ownable {
+contract YBasset is ERC20, IYBasset, Ownable {
     /// @notice Address of the DepegPool contract managing mint and burn operations.
     IDepegPool public depegPool;
 
@@ -38,7 +38,7 @@ contract YBwtETH is ERC20, IYBwtETH, Ownable {
     }
 
     /**
-     * @notice Mint YB_wtETH tokens to a specific account.
+     * @notice Mint YB_asset tokens to a specific account.
      * @dev This function can only be called by the DepegPool contract.
      * @param _account The address that will receive the minted tokens.
      * @param _value The amount of tokens to mint.
@@ -48,7 +48,7 @@ contract YBwtETH is ERC20, IYBwtETH, Ownable {
     }
 
     /**
-     * @notice Burn YB_wtETH tokens from a specific account.
+     * @notice Burn YB_asset tokens from a specific account.
      * @dev This function can only be called by the DepegPool contract.
      * @param _account The address from which tokens will be burned.
      * @param _value The amount of tokens to burn.
@@ -68,7 +68,7 @@ contract YBwtETH is ERC20, IYBwtETH, Ownable {
     modifier onlyDepegPool() {
         require(
             msg.sender == address(depegPool),
-            "YBwtETH: Only depeg pool contract function"
+            "YBasset: Only depeg pool contract function"
         );
         _;
     }

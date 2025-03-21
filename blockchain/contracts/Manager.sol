@@ -2,15 +2,15 @@
 pragma solidity 0.8.27;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import {YBwtETH} from "./YBwtETH.sol";
-import {DPwtETH} from "./DPwtETH.sol";
+import {YBasset} from "./YBasset.sol";
+import {DPasset} from "./DPasset.sol";
 import {DepegPool} from "./DepegPool.sol";
 import {StableSwap} from "./StableSwap.sol";
 
 contract Manager is Ownable {
     struct Depeg {
-        address yb_wtETH;
-        address dp_wtETH;
+        address yb_asset;
+        address dp_asset;
         address depegPool;
         address swap;
     }
@@ -21,7 +21,7 @@ contract Manager is Ownable {
 
     function deployDepeg(
         address _tPool,
-        address _wtETH,
+        address _asset,
         string memory _yb_name,
         string memory _yb_symbol,
         string memory _dp_name,
@@ -29,11 +29,11 @@ contract Manager is Ownable {
         string memory _pool_name,
         uint256 _poolActiveDuration
     ) external onlyOwner {
-        YBwtETH yb = new YBwtETH(_yb_name, _yb_symbol);
-        DPwtETH dp = new DPwtETH(_dp_name, _dp_symbol);
+        YBasset yb = new YBasset(_yb_name, _yb_symbol);
+        DPasset dp = new DPasset(_dp_name, _dp_symbol);
         DepegPool depegPool = new DepegPool(
             _tPool,
-            _wtETH,
+            _asset,
             address(dp),
             address(yb),
             _poolActiveDuration,

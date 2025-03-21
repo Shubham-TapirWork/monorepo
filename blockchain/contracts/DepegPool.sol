@@ -7,8 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/ILiquidityPool.sol";
 import "./interfaces/IWtETH.sol";
 import "./interfaces/ItETH.sol";
-import "./interfaces/IDPwtETH.sol";
-import "./interfaces/IYBwtETH.sol";
+import "./interfaces/IDPasset.sol";
+import "./interfaces/IYBasset.sol";
 
 contract DepegPool {
     // Name of the pool.
@@ -17,14 +17,14 @@ contract DepegPool {
     /// Address of the liquidity pool contract managing Ether.
     ILiquidityPool public liquidityPool;
 
-    // Address of the wrapped Ether token (wtETH).
-    IWtETH public immutable wtETH;
+    // Address of the wrapped Ether token (asset).
+    IWtETH public immutable asset;
 
-    // Address of the depegged version of wtETH (DP_wtETH).
-    IDPwtETH public immutable DP_wtETH;
+    // Address of the depegged version of asset (DP_asset).
+    IDPasset public immutable DP_asset;
 
-    // Address of the yield-bearing version of wtETH (YB_wtETH).
-    IYBwtETH public immutable YB_wtETH;
+    // Address of the yield-bearing version of asset (YB_asset).
+    IYBasset public immutable YB_asset;
 
     // Duration (in seconds) for which the pool remains active.
     uint256 public poolActiveDuration;
@@ -49,24 +49,24 @@ contract DepegPool {
 
     /**
      * @dev Constructor initializes the pool with token addresses, duration, and pool name.
-     * @param _wtETH Address of the wrapped Ether (wtETH) token.
-     * @param _DP_wtETH Address of the depegged version of wtETH (DP_wtETH).
-     * @param _YB_wtETH Address of the yield-bearing version of wtETH (YB_wtETH).
+     * @param _asset Address of the wrapped Ether (asset) token.
+     * @param _DP_asset Address of the depegged version of asset (DP_asset).
+     * @param _YB_asset Address of the yield-bearing version of asset (YB_asset).
      * @param _poolActiveDuration Duration in seconds for which the pool will remain active.
      * @param _name Name of the pool.
      */
     constructor(
         address _tPool,
-        address _wtETH,
-        address _DP_wtETH,
-        address _YB_wtETH,
+        address _asset,
+        address _DP_asset,
+        address _YB_asset,
         uint256 _poolActiveDuration,
         string memory _name
     ) {
         liquidityPool = ILiquidityPool(_tPool);
-        wtETH = IWtETH(_wtETH);
-        DP_wtETH = IDPwtETH(_DP_wtETH);
-        YB_wtETH = IYBwtETH(_YB_wtETH);
+        asset = IWtETH(_asset);
+        DP_asset = IDPasset(_DP_asset);
+        YB_asset = IYBasset(_YB_asset);
         name = _name;
         poolActiveDuration = _poolActiveDuration;
         startTime = block.timestamp;
@@ -74,31 +74,31 @@ contract DepegPool {
     }
 
     /**
-     * @dev Splits the provided wtETH into DP_wtETH and YB_wtETH equally.
+     * @dev Splits the provided asset into DP_asset and YB_asset equally.
      * The pool must be active to perform the split.
-     * @param _amount Amount of wtETH to split.
+     * @param _amount Amount of asset to split.
      */
     function splitToken(uint256 _amount) external {
         require(_amount > 0, "DepegPool: no zero amount");
         require(checkPoolIsActive(), "DepegPool: pool isn't active");
 
-        wtETH.transferFrom(msg.sender, address(this), _amount);
-        DP_wtETH.mint(msg.sender, _amount / 2);
-        YB_wtETH.mint(msg.sender, _amount / 2);
+        asset.transferFrom(msg.sender, address(this), _amount);
+        DP_asset.mint(msg.sender, _amount / 2);
+        YB_asset.mint(msg.sender, _amount / 2);
     }
 
     /**
-     * @dev Un-splits previously split DP_wtETH and YB_wtETH back into wtETH.
+     * @dev Un-splits previously split DP_asset and YB_asset back into asset.
      * The pool must be active to perform the un-split.
-     * @param _amount Total amount of tokens (DP + YB) to un-split into wtETH.
+     * @param _amount Total amount of tokens (DP + YB) to un-split into asset.
      */
     function unSplitToken(uint256 _amount) external {
         require(_amount > 0, "DepegPool: no zero amount");
         require(checkPoolIsActive(), "DepegPool: pool isn't active");
 
-        DP_wtETH.burn(msg.sender, _amount / 2);
-        YB_wtETH.burn(msg.sender, _amount / 2);
-        wtETH.transfer(msg.sender, _amount);
+        DP_asset.burn(msg.sender, _amount / 2);
+        YB_asset.burn(msg.sender, _amount / 2);
+        asset.transfer(msg.sender, _amount);
     }
 
     /**
@@ -136,10 +136,10 @@ contract DepegPool {
     }
 
     /**
-     * @dev Redeems YB_wtETH and DP_wtETH tokens for wtETH based on whether a depeg occurred.
+     * @dev Redeems YB_asset and DP_asset tokens for asset based on whether a depeg occurred.
      * If no depeg, all tokens are returned 1:1. If depeg happened, depeg size is factored into the redemption.
-     * @param _amountYB Amount of YB_wtETH to redeem.
-     * @param _amountDP Amount of DP_wtETH to redeem.
+     * @param _amountYB Amount of YB_asset to redeem.
+     * @param _amountDP Amount of DP_asset to redeem.
      */
     function redeemTokens(uint256 _amountYB, uint256 _amountDP) external {
         require(DepegResolved, "DepegPool: the depeg is not resolved");
@@ -161,8 +161,8 @@ contract DepegPool {
                 10 ** depegDecimal;
         }
 
-        YB_wtETH.burn(msg.sender, _amountYB);
-        DP_wtETH.burn(msg.sender, _amountDP);
-        wtETH.transfer(msg.sender, _amountWtETHtoSend);
+        YB_asset.burn(msg.sender, _amountYB);
+        DP_asset.burn(msg.sender, _amountDP);
+        asset.transfer(msg.sender, _amountWtETHtoSend);
     }
 }

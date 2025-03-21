@@ -4,15 +4,15 @@ pragma solidity 0.8.27;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol"; // Standard ERC20 contract from OpenZeppelin.
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./interfaces/IYBwtETH.sol"; // Interface for the yield-bearing wtETH (YB_wtETH).
+import "./interfaces/IYBasset.sol"; // Interface for the yield-bearing asset (YB_asset).
 import "./interfaces/IDepegPool.sol"; // Interface for interacting with the DepegPool contract.
 
 /**
- * @title DPwtETH
- * @dev ERC20-based token representing the depegged version of wtETH (DP_wtETH).
- *      This contract allows the DepegPool to mint and burn DP_wtETH tokens.
+ * @title DPasset
+ * @dev ERC20-based token representing the depegged version of asset (DP_asset).
+ *      This contract allows the DepegPool to mint and burn DP_asset tokens.
  */
-contract DPwtETH is ERC20, IYBwtETH, Ownable {
+contract DPasset is ERC20, IYBasset, Ownable {
     /// @notice Address of the DepegPool contract that manages minting and burning.
     IDepegPool public depegPool;
 
@@ -38,7 +38,7 @@ contract DPwtETH is ERC20, IYBwtETH, Ownable {
     }
 
     /**
-     * @notice Mint DP_wtETH tokens to a specific account.
+     * @notice Mint DP_asset tokens to a specific account.
      * @dev Can only be called by the DepegPool contract.
      * @param _account Address to receive the minted tokens.
      * @param _value Amount of tokens to mint.
@@ -48,7 +48,7 @@ contract DPwtETH is ERC20, IYBwtETH, Ownable {
     }
 
     /**
-     * @notice Burn DP_wtETH tokens from a specific account.
+     * @notice Burn DP_asset tokens from a specific account.
      * @dev Can only be called by the DepegPool contract.
      * @param _account Address from which tokens will be burned.
      * @param _value Amount of tokens to burn.
@@ -68,7 +68,7 @@ contract DPwtETH is ERC20, IYBwtETH, Ownable {
     modifier onlyDepegPool() {
         require(
             msg.sender == address(depegPool),
-            "DPwtETH: Only depeg pool contract function"
+            "DPasset: Only depeg pool contract function"
         );
         _;
     }
