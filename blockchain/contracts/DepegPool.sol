@@ -24,6 +24,9 @@ contract DepegPool {
     // Name of the pool.
     string public name;
 
+    // flag of the pool.
+    string public flag;
+
     /// Address of the liquidity pool contract managing Ether.
     ILiquidityPool public liquidityPool;
 
@@ -71,7 +74,8 @@ contract DepegPool {
         address _DP_asset,
         address _YB_asset,
         uint256 _poolActiveDuration,
-        string memory _name
+        string memory _name,
+        string memory _flag
     ) {
         liquidityPool = ILiquidityPool(_tPool);
         asset = IWtETH(_asset);
@@ -81,6 +85,7 @@ contract DepegPool {
         poolActiveDuration = _poolActiveDuration;
         startTime = block.timestamp;
         startSharePrice = currentSharePrice();
+        flag = _flag;
     }
 
     /**

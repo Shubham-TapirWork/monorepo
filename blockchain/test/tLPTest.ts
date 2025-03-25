@@ -54,7 +54,8 @@ describe("TLP", function () {
       "test dp",
       "test dp",
       "test pool",
-      lpTime
+      lpTime,
+      "base-test"
     )
     const module = await manager.depegModule(0)
     const DepegPool = await hre.ethers.getContractFactory("DepegPool")

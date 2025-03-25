@@ -17,6 +17,19 @@ contract Manager is Ownable {
 
     Depeg[] public depegModule;
 
+
+    event DeployDepeg(
+        address tPool,
+        address asset,
+        string yb_name,
+        string yb_symbol,
+        string dp_name,
+        string dp_symbol,
+        string pool_name,
+        uint256 poolActiveDuration,
+        string flag
+    );
+
     constructor() Ownable(msg.sender) {}
 
     function deployDepeg(
@@ -27,7 +40,8 @@ contract Manager is Ownable {
         string memory _dp_name,
         string memory _dp_symbol,
         string memory _pool_name,
-        uint256 _poolActiveDuration
+        uint256 _poolActiveDuration,
+        string memory flag
     ) external onlyOwner {
         YBasset yb = new YBasset(_yb_name, _yb_symbol);
         DPasset dp = new DPasset(_dp_name, _dp_symbol);
@@ -37,7 +51,8 @@ contract Manager is Ownable {
             address(dp),
             address(yb),
             _poolActiveDuration,
-            _pool_name
+            _pool_name,
+            flag
         );
 
         yb.setContractDepegPool(address(depegPool));
@@ -47,6 +62,18 @@ contract Manager is Ownable {
 
         depegModule.push(
             Depeg(address(yb), address(dp), address(depegPool), address(swap))
+        );
+
+        emit DeployDepeg(
+            _tPool,
+             _asset,
+             _yb_name,
+             _yb_symbol,
+             _dp_name,
+             _dp_symbol,
+             _pool_name,
+             _poolActiveDuration,
+            flag
         );
     }
 }
