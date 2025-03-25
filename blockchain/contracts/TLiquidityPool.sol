@@ -48,6 +48,10 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     event Deposit(address indexed sender, uint256 amount);
     /// @dev withdraw event
     event Withdraw(address indexed sender, address receipent, uint256 amount);
+    /// @dev get dp for ETH
+    event GetDPassetETHForETH(address indexed receiver, uint256 amount);
+    /// @dev get yb for eth
+    event GetYBassetETHForETH(address indexed receiver, uint256 amount);
 
     /// @notice Constructor to initialize the contract
     constructor(address _managerAddress) Ownable(msg.sender) {
@@ -139,8 +143,11 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
         // finally send all dp to user
         IERC20 dp = IERC20(_dpAddress);
-        dp.transfer(msg.sender, dp.balanceOf(address(this)));
 
+        uint256 dpAmount = dp.balanceOf(address(this));
+        dp.transfer(msg.sender, dpAmount);
+
+        emit GetDPassetETHForETH(msg.sender, dpAmount);
     }
 
     function getYBassetForETH(
@@ -176,8 +183,11 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
         // finally send all yb to user
         IERC20 yb = IERC20(_ybAddress);
-        yb.transfer(msg.sender, yb.balanceOf(address(this)));
 
+        uint256 ybAmount = yb.balanceOf(address(this));
+        yb.transfer(msg.sender, ybAmount);
+
+        emit GetYBassetETHForETH(msg.sender, ybAmount);
     }
 
     /// @notice withdraw from pool

@@ -11,6 +11,16 @@ import "./interfaces/IDPasset.sol";
 import "./interfaces/IYBasset.sol";
 
 contract DepegPool {
+
+    /**
+        EVENTS
+    **/
+    /// @dev split token event
+    event SplitToken(address indexed sender, uint256 amount);
+    /// @dev Un split event
+    event UnSplitToken(address indexed sender, uint256 amount);
+
+
     // Name of the pool.
     string public name;
 
@@ -85,6 +95,8 @@ contract DepegPool {
         asset.transferFrom(msg.sender, address(this), _amount);
         DP_asset.mint(msg.sender, _amount / 2);
         YB_asset.mint(msg.sender, _amount / 2);
+
+        emit SplitToken(msg.sender, _amount);
     }
 
     /**
@@ -99,6 +111,7 @@ contract DepegPool {
         DP_asset.burn(msg.sender, _amount / 2);
         YB_asset.burn(msg.sender, _amount / 2);
         asset.transfer(msg.sender, _amount);
+        emit UnSplitToken(msg.sender, _amount);
     }
 
     /**
