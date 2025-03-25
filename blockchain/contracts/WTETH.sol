@@ -16,7 +16,7 @@ contract WtETH is ERC20, IWtETH, Ownable {
         address _liquidityPool,
         address _tETH
     )
-    ERC20("Wrapped wtETH", "wTETH")
+    ERC20("Wrapped asset", "wTETH")
     Ownable(msg.sender)
     {
         require(_liquidityPool != address(0), "WtETH: No zero addresses");
@@ -31,23 +31,23 @@ contract WtETH is ERC20, IWtETH, Ownable {
     }
 
     function wrap(uint256 _tETHAmount) external returns (uint256) {
-        require(_tETHAmount > 0, "wtETH: can't wrap zero tETH");
+        require(_tETHAmount > 0, "asset: can't wrap zero tETH");
         uint256 wtEthAmount = liquidityPool.sharesForAmount(_tETHAmount);
         _mint(msg.sender, wtEthAmount);
         tETH.transferFrom(msg.sender, address(this), _tETHAmount);
         return wtEthAmount;
     }
 
-    function unwrap(uint256 _wtETH) external returns (uint256) {
-        require(_wtETH > 0, "wtETH: can't unwrap zero wtETH");
-        uint256 tETHAmount = liquidityPool.amountForShare(_wtETH);
-        _burn(msg.sender, _wtETH);
+    function unwrap(uint256 _asset) external returns (uint256) {
+        require(_asset > 0, "asset: can't unwrap zero asset");
+        uint256 tETHAmount = liquidityPool.amountForShare(_asset);
+        _burn(msg.sender, _asset);
         tETH.transfer(msg.sender, tETHAmount);
         return tETHAmount;
     }
 
-    function getTETHByWtETH(uint256 _wtETH) external view returns (uint256) {
-        return liquidityPool.amountForShare(_wtETH);
+    function getTETHByWtETH(uint256 _asset) external view returns (uint256) {
+        return liquidityPool.amountForShare(_asset);
     }
 
 }

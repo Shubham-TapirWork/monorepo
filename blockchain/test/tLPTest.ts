@@ -11,10 +11,10 @@ import {
   TETH,
   TLiquidityPool,
   DepegPool,
-  DPwtETH,
-  YBwtETH,
+  DPasset,
+  YBasset,
   StableSwap,
-  YBwtETH__factory
+  YBasset__factory
 } from "../typechain-types";
 
 const {ethers} = require("hardhat"); // assuming commonjs
@@ -59,10 +59,10 @@ describe("TLP", function () {
     const module = await manager.depegModule(0)
     const DepegPool = await hre.ethers.getContractFactory("DepegPool")
     const depegPool = DepegPool.attach(module.depegPool)
-    const YB = await hre.ethers.getContractFactory("YBwtETH")
-    const yb = YB.attach(module.yb_wtETH)
-    const DP = await hre.ethers.getContractFactory("DPwtETH")
-    const dp = DP.attach(module.dp_wtETH)
+    const YB = await hre.ethers.getContractFactory("YBasset")
+    const yb = YB.attach(module.yb_asset)
+    const DP = await hre.ethers.getContractFactory("DPasset")
+    const dp = DP.attach(module.dp_asset)
 
     const AMM = await hre.ethers.getContractFactory("StableSwap");
     const amm = AMM.attach(module.swap);
@@ -227,14 +227,14 @@ describe("TLP", function () {
       await lp.connect(managerAddress).rebase(ethers.parseEther("9"));
       expect(await tETH.balanceOf(firstAccount.address)).to.be.equal(ethers.parseEther("6"))
 
-      // 1 wtETH = 2 tETH
+      // 1 asset = 2 tETH
       await tETH.connect(firstAccount).approve(wTETH.target, ethers.parseEther("3"))
       await tETH.connect(secondAccount).approve(wTETH.target, ethers.parseEther("3"))
 
       expect(await tETH.shares(secondAccount.address))
         .to.be.equal(ethers.parseEther("3"))
 
-      // wrapping should give 50% of wtETH
+      // wrapping should give 50% of asset
       await wTETH.connect(firstAccount).wrap(ethers.parseEther("3"))
       await wTETH.connect(secondAccount).wrap(ethers.parseEther("3"))
 
@@ -259,7 +259,7 @@ describe("TLP", function () {
 
       await wTETH.connect(firstAccount).unwrap(ethers.parseEther("0.5"))
 
-      // when unwrapping 0.5 wtETH, the balance should be 5
+      // when unwrapping 0.5 asset, the balance should be 5
       expect(await tETH.balanceOf(wTETH.target))
         .to.be.equal(ethers.parseEther("5"))
       expect(await tETH.balanceOf(firstAccount.address))
@@ -280,7 +280,7 @@ describe("TLP", function () {
       deploymentTransaction(): ContractTransactionResponse;
     }, accounts: any[], lp: TLiquidityPool & {
       deploymentTransaction(): ContractTransactionResponse;
-    }, depegPool: DepegPool & Omit<BaseContract, keyof BaseContract>, yb: YBwtETH & Omit<BaseContract, keyof BaseContract>, dp: DPwtETH & Omit<BaseContract, keyof BaseContract>, amm: StableSwap & Omit<BaseContract, keyof BaseContract>) {
+    }, depegPool: DepegPool & Omit<BaseContract, keyof BaseContract>, yb: YBasset & Omit<BaseContract, keyof BaseContract>, dp: DPasset & Omit<BaseContract, keyof BaseContract>, amm: StableSwap & Omit<BaseContract, keyof BaseContract>) {
         const owner = accounts[0];
         await lp.deposit({value: ethers.parseEther("100")})
         await tETH.approve(wTETH.target, ethers.parseEther("100"))
@@ -305,7 +305,7 @@ describe("TLP", function () {
         const firstAccount = accounts[1]
         const secondAccount = accounts[2]
 
-        await lp.connect(firstAccount).getDPwtETHForETH(
+        await lp.connect(firstAccount).getDPassetForETH(
           depegPool.target,
           amm.target,
           yb.target,
@@ -313,7 +313,7 @@ describe("TLP", function () {
           {value: ethers.parseEther("1")}
           )
 
-        await lp.connect(secondAccount).getDPwtETHForETH(
+        await lp.connect(secondAccount).getDPassetForETH(
           depegPool.target,
           amm.target,
           yb.target,
@@ -336,7 +336,7 @@ describe("TLP", function () {
         const firstAccount = accounts[1]
         const secondAccount = accounts[2]
 
-        await lp.connect(firstAccount).getYBwtETHForETH(
+        await lp.connect(firstAccount).getYBassetForETH(
             depegPool.target,
             amm.target,
             yb.target,
@@ -344,7 +344,7 @@ describe("TLP", function () {
             {value: ethers.parseEther("1")}
           )
 
-        await lp.connect(secondAccount).getYBwtETHForETH(
+        await lp.connect(secondAccount).getYBassetForETH(
           depegPool.target,
           amm.target,
           yb.target,

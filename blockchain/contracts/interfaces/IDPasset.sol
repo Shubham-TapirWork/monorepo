@@ -1,6 +1,6 @@
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-interface IDPwtETH is IERC20 {
+interface IDPasset is IERC20 {
     function mint(address _account, uint256 _value) external;
     function burn(address _account, uint256 _value) external;
 }

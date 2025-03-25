@@ -19,7 +19,7 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     ItETH public tETH;
 
     /// @notice Reference to the IWtETH contract that manages tETH shares
-    IWtETH public wtETH;
+    IWtETH public asset;
 
     /// @notice the address which will call rebase function and update the contract balance by adding rewards
     address public managerAddress;
@@ -60,7 +60,7 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     function setContract(address _contractTETH, address _contractWtETH) external onlyOwner {
         if (address(tETH) != address(0)) revert TETHAlreadySet();
         tETH = ItETH(_contractTETH);
-        wtETH = IWtETH(_contractWtETH);
+        asset = IWtETH(_contractWtETH);
     }
 
     /// @notice Allows users to deposit Ether into the liquidity pool and mint tETH shares in return
@@ -106,7 +106,7 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
     }
 
 
-    function getDPwtETHForETH(
+    function getDPassetForETH(
         address _depegPoolAddress,
         address _stableSwap,
         address _ybAddress,
@@ -124,12 +124,12 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
         // Mint tETH shares to the liquidity contract, and wrap it
         tETH.mintShares(address(this), share);
-        tETH.approve(address(wtETH), amountForShare(share));
-        wtETH.wrap(amountForShare(share));
+        tETH.approve(address(asset), amountForShare(share));
+        asset.wrap(amountForShare(share));
 
         // split wrap ETH which should be equal to _shares
         IDepegPool depegPool = IDepegPool(_depegPoolAddress);
-        wtETH.approve(_depegPoolAddress, share);
+        asset.approve(_depegPoolAddress, share);
         depegPool.splitToken(share);
 
         // swap all YB into DP
@@ -143,7 +143,7 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
     }
 
-    function getYBwtETHForETH(
+    function getYBassetForETH(
         address _depegPoolAddress,
         address _stableSwap,
         address _ybAddress,
@@ -161,12 +161,12 @@ contract TLiquidityPool is Ownable, ILiquidityPool {
 
         // Mint tETH shares to the liquidity contract, and wrap it
         tETH.mintShares(address(this), share);
-        tETH.approve(address(wtETH), amountForShare(share));
-        wtETH.wrap(amountForShare(share));
+        tETH.approve(address(asset), amountForShare(share));
+        asset.wrap(amountForShare(share));
 
         // split wrap ETH which should be equal to _shares
         IDepegPool depegPool = IDepegPool(_depegPoolAddress);
-        wtETH.approve(_depegPoolAddress, share);
+        asset.approve(_depegPoolAddress, share);
         depegPool.splitToken(share);
 
         // swap all dp into yb
