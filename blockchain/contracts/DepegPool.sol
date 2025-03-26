@@ -11,8 +11,21 @@ import "./interfaces/IDPasset.sol";
 import "./interfaces/IYBasset.sol";
 
 contract DepegPool {
+
+    /**
+        EVENTS
+    **/
+    /// @dev split token event
+    event SplitToken(address indexed sender, uint256 amount);
+    /// @dev Un split event
+    event UnSplitToken(address indexed sender, uint256 amount);
+
+
     // Name of the pool.
     string public name;
+
+    // flag of the pool.
+    string public flag;
 
     /// Address of the liquidity pool contract managing Ether.
     ILiquidityPool public liquidityPool;
@@ -61,7 +74,8 @@ contract DepegPool {
         address _DP_asset,
         address _YB_asset,
         uint256 _poolActiveDuration,
-        string memory _name
+        string memory _name,
+        string memory _flag
     ) {
         liquidityPool = ILiquidityPool(_tPool);
         asset = IWtETH(_asset);
@@ -71,6 +85,7 @@ contract DepegPool {
         poolActiveDuration = _poolActiveDuration;
         startTime = block.timestamp;
         startSharePrice = currentSharePrice();
+        flag = _flag;
     }
 
     /**
@@ -85,6 +100,8 @@ contract DepegPool {
         asset.transferFrom(msg.sender, address(this), _amount);
         DP_asset.mint(msg.sender, _amount / 2);
         YB_asset.mint(msg.sender, _amount / 2);
+
+        emit SplitToken(msg.sender, _amount);
     }
 
     /**
@@ -99,6 +116,7 @@ contract DepegPool {
         DP_asset.burn(msg.sender, _amount / 2);
         YB_asset.burn(msg.sender, _amount / 2);
         asset.transfer(msg.sender, _amount);
+        emit UnSplitToken(msg.sender, _amount);
     }
 
     /**

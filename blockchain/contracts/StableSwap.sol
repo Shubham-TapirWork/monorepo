@@ -41,6 +41,17 @@ contract StableSwap {
     bool tradingActive = true;
     bool freeze = false;
 
+
+    /**
+        EVENTS
+    **/
+    /// @dev split token event
+    event AddLiquidity(address indexed sender, uint256[N] amounts, uint256 minShares);
+    /// @dev Un split event
+    event RemoveLiquidity(address indexed sender, uint256 shares, uint256[N] minAmountsOut);
+    /// @dev Swap
+    event Swap(address indexed sender, uint256 index, uint256 amount);
+
     constructor(address[N] memory _tokens) {
         tokens = _tokens;
         owner = msg.sender;
@@ -287,6 +298,8 @@ contract StableSwap {
         balances[j] -= dy;
 
         IERC20(tokens[j]).transfer(msg.sender, dy);
+
+        emit Swap(msg.sender, j, dy);
     }
 
     function addLiquidity(uint256[N] calldata amounts, uint256 minShares)
@@ -348,7 +361,9 @@ contract StableSwap {
         }
         require(shares >= minShares, "shares < min");
         _mint(msg.sender, shares);
-        
+
+        emit AddLiquidity(msg.sender, amounts, minShares);
+
         return shares;
     }
 
@@ -369,5 +384,7 @@ contract StableSwap {
         }
 
         _burn(msg.sender, shares);
+
+        emit RemoveLiquidity(msg.sender, shares, minAmountsOut);
     }
 }

@@ -22,7 +22,7 @@ describe("DepegPool, YB, and DP Tests", function () {
 
         // Deploy DepegPool with required arguments
         const DepegPool = await hre.ethers.getContractFactory("DepegPool");
-        const depegPool = await DepegPool.deploy(lp.target, wTETH.target, DP_asset.target, YB_asset.target, lpTime, "Test Depeg Pool");
+        const depegPool = await DepegPool.deploy(lp.target, wTETH.target, DP_asset.target, YB_asset.target, lpTime, "Test Depeg Pool", "test-base");
 
         await YB_asset.setContractDepegPool(depegPool.target);
         await DP_asset.setContractDepegPool(depegPool.target);
@@ -40,6 +40,7 @@ describe("DepegPool, YB, and DP Tests", function () {
         expect(await depegPool.asset()).to.equal(wTETH.target);
         expect(await depegPool.DP_asset()).to.equal(DP_asset.target);
         expect(await depegPool.YB_asset()).to.equal(YB_asset.target);
+        expect(await depegPool.flag()).to.equal("test-base");
     });
 
     it("Should allow splitting tokens into YB and DP tokens", async function () {
@@ -188,7 +189,7 @@ describe("DepegPool, YB, and DP Tests", function () {
 
     it("Should allow manager to deploy contracts", async function () {
       const { manager, lp, wTETH} = await deployAdditionalFixtures();
-      await manager.deployDepeg(
+      await expect(manager.deployDepeg(
         lp.target,
         wTETH.target,
         "test 1",
@@ -196,8 +197,9 @@ describe("DepegPool, YB, and DP Tests", function () {
         "test 1",
         "test 2",
         "test pool",
-        1455
-      )
+        1455,
+        "flag"
+      )).to.emit(manager, "DeployDepeg");
 
       const module = await manager.depegModule(0)
 
@@ -229,7 +231,8 @@ describe("DepegPool, YB, and DP Tests", function () {
         "test 1",
         "test 2",
         "test pool",
-        1455
+        1455,
+        "flag"
       )).to.be.revertedWithCustomError(manager, "OwnableUnauthorizedAccount", )
 
 
