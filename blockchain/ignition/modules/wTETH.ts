@@ -1,8 +1,8 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const WtETH = buildModule("WTETH", (m) => {
-    const liquidityPoolAddress = "0x96A3b23FeeB97D22C807829491372c56Ff2e0036";
-    const tETH = "0x90033B32d177AB85A365661568cfba0e04BFC5c0";
+    const liquidityPoolAddress = "0xcfFEdb8E09a7029ae3181c93541000823A366337";
+    const tETH = "0x6d87012eF7De41aC25D24a1962bB2Cb6E70879E9";
 
     const WtETH =  m.contract("WtETH", [liquidityPoolAddress, tETH]);
     return { WtETH };

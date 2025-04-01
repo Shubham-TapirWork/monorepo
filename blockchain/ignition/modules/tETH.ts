@@ -1,7 +1,7 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 const TETH = buildModule("TETH", (m) => {
-    const liquidityPoolAddress = "0x96A3b23FeeB97D22C807829491372c56Ff2e0036";
+    const liquidityPoolAddress = "0xcfFEdb8E09a7029ae3181c93541000823A366337";
 
     const TETH =  m.contract("TETH", [liquidityPoolAddress]);
     return { TETH };

@@ -1,5 +1,6 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import * as process from "node:process";
 
 require("dotenv").config();
 
@@ -22,6 +23,11 @@ const config: HardhatUserConfig = {
       url: process.env.SEPOLIA_URL,
       accounts: [process.env.ACCOUNT_PRIVATE_KEY],
     },
+    bsc: {
+      chainId: 97,
+      url: process.env.BSC_URL,
+      accounts: [process.env.ACCOUNT_PRIVATE_KEY],
+    }
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
